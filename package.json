@@ -1,0 +1,21 @@
+{
+  "name": "vite-design",
+  "version": "1.0.0",
+  "description": "Vite 源码分析",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vuepress dev docs",
+    "build": "vuepress build docs",
+    "publish": "npm run build && surge ./docs/.vuepress/dist vite-design.surge.sh",
+    "deploy": "rm -rf build && mkdir build && npm run build && cp -r docs/.vuepress/dist/* ./build && midway-bin deploy --skipBuild"
+  },
+  "devDependencies": {
+    "@vuepress/plugin-back-to-top": "^1.3.1",
+    "@vuepress/plugin-medium-zoom": "^1.3.1",
+    "vuepress": "^1.9.7",
+    "@midwayjs/cli": "^1.2.36",
+    "@midwayjs/cli-plugin-faas": "^1.2.72",
+    "surge": "^0.21.6"
+  }
+}

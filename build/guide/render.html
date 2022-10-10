@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>组件渲染 | Vite Design</title>
+    <meta name="generator" content="VuePress 1.9.7">
+    
+    <meta name="description" content="Vite 源码分析">
+    <meta name="keywords" itemprop="keywords" content="vite 源码分析 Vue 前端开发,Vue.js,vue-cli">
+    <meta property="og:title" content="vite 源码分析">
+    <meta property="og:description" content="vite vue 源码分析 一个基于 Vue3 单文件组件的非打包开发服务器">
+    
+    <link rel="preload" href="/assets/css/0.styles.1f7fd2b8.css" as="style"><link rel="preload" href="/assets/js/app.039410b3.js" as="script"><link rel="preload" href="/assets/js/2.ada7b47c.js" as="script"><link rel="preload" href="/assets/js/9.82ee3f19.js" as="script"><link rel="prefetch" href="/assets/js/10.9e5a99ec.js"><link rel="prefetch" href="/assets/js/11.6e3574d6.js"><link rel="prefetch" href="/assets/js/12.361edb36.js"><link rel="prefetch" href="/assets/js/13.300cdcaf.js"><link rel="prefetch" href="/assets/js/14.fd525acb.js"><link rel="prefetch" href="/assets/js/15.ed12af1b.js"><link rel="prefetch" href="/assets/js/16.079dff29.js"><link rel="prefetch" href="/assets/js/3.1a97a2e4.js"><link rel="prefetch" href="/assets/js/4.da0ba98d.js"><link rel="prefetch" href="/assets/js/5.de517757.js"><link rel="prefetch" href="/assets/js/6.bc690761.js"><link rel="prefetch" href="/assets/js/7.38831321.js"><link rel="prefetch" href="/assets/js/8.4a7fb891.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.1f7fd2b8.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-active"><!----> <span class="site-name">Vite Design</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/guide/" class="nav-link router-link-active">
+  Guide
+</a></div><div class="nav-item"><a href="https://github.com/zhangyuang/vite-design" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Github
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/guide/" class="nav-link router-link-active">
+  Guide
+</a></div><div class="nav-item"><a href="https://github.com/zhangyuang/vite-design" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Github
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav>  <ul class="sidebar-links"><li><section class="sidebar-group depth-0"><p class="sidebar-heading open"><span></span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/guide/" aria-current="page" class="sidebar-link">简介</a></li><li><a href="/guide/chinese-doc.html" class="sidebar-link">vite ⚡ 1.0 中文文档</a></li><li><a href="/guide/getting-start.html" class="sidebar-link">学习准备</a></li><li><a href="/guide/module-resolve.html" class="sidebar-link">模块解析</a></li><li><a href="/guide/optimize.html" class="sidebar-link">预优化</a></li><li><a href="/guide/render.html" aria-current="page" class="active sidebar-link">组件渲染</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/guide/render.html#处理-css-文件" class="sidebar-link">处理 css 文件</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/guide/render.html#挂载样式" class="sidebar-link">挂载样式</a></li><li class="sidebar-sub-header"><a href="/guide/render.html#updatestyle" class="sidebar-link">updateStyle</a></li></ul></li><li class="sidebar-sub-header"><a href="/guide/render.html#解析-vue-文件" class="sidebar-link">解析 Vue 文件</a></li></ul></li><li><a href="/guide/hmr.html" class="sidebar-link">热替换</a></li><li><a href="/guide/2.0/optimize.html" class="sidebar-link">预优化 2.0</a></li><li><a href="/guide/2.0/ssr.html" class="sidebar-link">SSR + Vite</a></li></ul></section></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="组件渲染"><a href="#组件渲染" class="header-anchor">#</a> 组件渲染</h1> <p>前面的章节我们说到了本地文件在发送给浏览器之前是会根据文件类型做不同的 transfrom 代码转换的。
+<img src="/assets/img/render.18e96350.png" alt="">
+观察一下我们实际在浏览器中加载的文件内容。可以看到表面我们加载的是一个 .vue 组件。但是文件的实际内容还是传统的 .js 文件，并且 Content-Type 也是 <code>application/javascript; charset=utf-8</code>
+所以浏览器才能够直接运行该文件。并且我们可以发现不同的文件类型后面跟的 query type 参数也不一样。有 <code>?type=template</code> <code>?type=import</code>。下面让我们来具体分析一下一个 Vue 组件是如何在浏览器中被渲染的吧</p> <h2 id="处理-css-文件"><a href="#处理-css-文件" class="header-anchor">#</a> 处理 css 文件</h2> <p>浏览器是不支持直接 import 导入 .css 文件的。如果你配置过 webpack 来处理 css 文件，那么你应该清楚这类问题的解决方式要么是将 css 编译成 js 文件，要么是把组件中的 css 单独提取为 css文件通过 link 标签来进行加载。Vite 在本地开发时采用的是第一种方式，在生产环境构建时仍然是编译成独立的 css 文件进行加载。</p> <h3 id="挂载样式"><a href="#挂载样式" class="header-anchor">#</a> 挂载样式</h3> <p>Vite 使用 serverPluginCss 插件来处理形如 <code>http://localhost:3000/src/index.css?import</code> 这样的以.css为后缀结尾且 query 包含 import 的请求。</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token comment">// src/node/server/serverPluginCss.ts</span>
+<span class="token keyword">const</span> id <span class="token operator">=</span> <span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span><span class="token function">hash_sum</span><span class="token punctuation">(</span>ctx<span class="token punctuation">.</span>path<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isImportRequest</span><span class="token punctuation">(</span>ctx<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> <span class="token punctuation">{</span> css<span class="token punctuation">,</span> modules <span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">processCss</span><span class="token punctuation">(</span>root<span class="token punctuation">,</span> ctx<span class="token punctuation">)</span> <span class="token comment">// 这里主要对css文件做一些预处理之类的操作如 less-&gt;css, postcss之类的处理不在此处详细展开</span>
+    console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>modules<span class="token punctuation">)</span>
+    ctx<span class="token punctuation">.</span>type <span class="token operator">=</span> <span class="token string">'js'</span>
+    ctx<span class="token punctuation">.</span>body <span class="token operator">=</span> <span class="token function">codegenCss</span><span class="token punctuation">(</span>id<span class="token punctuation">,</span> css<span class="token punctuation">,</span> modules<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+<span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">codegenCss</span><span class="token punctuation">(</span>
+  <span class="token parameter"><span class="token literal-property property">id</span><span class="token operator">:</span> string<span class="token punctuation">,</span>
+  <span class="token literal-property property">css</span><span class="token operator">:</span> string<span class="token punctuation">,</span>
+  modules<span class="token operator">?</span><span class="token operator">:</span> Record<span class="token operator">&lt;</span>string<span class="token punctuation">,</span> string<span class="token operator">&gt;</span></span>
+<span class="token punctuation">)</span><span class="token operator">:</span> string <span class="token punctuation">{</span>
+  <span class="token keyword">let</span> code <span class="token operator">=</span>
+    <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">import { updateStyle } from &quot;</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>clientPublicPath<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">&quot;\n</span><span class="token template-punctuation string">`</span></span> <span class="token operator">+</span>
+    <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">const css = </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>css<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">\n</span><span class="token template-punctuation string">`</span></span> <span class="token operator">+</span>
+    <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">updateStyle(</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>id<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">, css)\n</span><span class="token template-punctuation string">`</span></span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>modules<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">export default </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>modules<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+    code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">export default css</span><span class="token template-punctuation string">`</span></span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> code
+<span class="token punctuation">}</span>
+</code></pre></div><p>在上面的代码中，我们劫持了 css 文件的请求以及重写了请求的响应。将 css 文件改写为 esmodule 格式的js文件。如果启用了 css-modules 则我们导出一个具体对象。因为组件需要使用 <code>:id=styles.xxx</code> 的形式来引用。对于普通的 css 文件则无需导出具体有意义的对象。这里的核心方法是 updateStyle，让我们来看看这个方法到底干了什么。</p> <h3 id="updatestyle"><a href="#updatestyle" class="header-anchor">#</a> updateStyle</h3> <p>从 <code>http://localhost:3000/src/index.css?import</code> 请求的详细响应信息可以看出。实质是 Vite 是通过 <code>updateStyle</code> 这个方法来将 css 字符串挂载到具体的 dom 元素上
+<img src="/assets/img/rendercss.37cb0279.png" alt=""></p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">export</span> <span class="token keyword">function</span> <span class="token function">updateStyle</span><span class="token punctuation">(</span><span class="token parameter"><span class="token literal-property property">id</span><span class="token operator">:</span> string<span class="token punctuation">,</span> <span class="token literal-property property">content</span><span class="token operator">:</span> string</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">let</span> style <span class="token operator">=</span> sheetsMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>id<span class="token punctuation">)</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>supportsConstructedSheet <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>content<span class="token punctuation">.</span><span class="token function">includes</span><span class="token punctuation">(</span><span class="token string">'@import'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>style <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span><span class="token punctuation">(</span>style <span class="token keyword">instanceof</span> <span class="token class-name">CSSStyleSheet</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">removeStyle</span><span class="token punctuation">(</span>id<span class="token punctuation">)</span>
+      style <span class="token operator">=</span> <span class="token keyword">undefined</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>style<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      style <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CSSStyleSheet</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+      style<span class="token punctuation">.</span><span class="token function">replaceSync</span><span class="token punctuation">(</span>content<span class="token punctuation">)</span>
+      <span class="token comment">// @ts-ignore</span>
+      document<span class="token punctuation">.</span>adoptedStyleSheets <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token operator">...</span>document<span class="token punctuation">.</span>adoptedStyleSheets<span class="token punctuation">,</span> style<span class="token punctuation">]</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      style<span class="token punctuation">.</span><span class="token function">replaceSync</span><span class="token punctuation">(</span>content<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>style <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span><span class="token punctuation">(</span>style <span class="token keyword">instanceof</span> <span class="token class-name">HTMLStyleElement</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">removeStyle</span><span class="token punctuation">(</span>id<span class="token punctuation">)</span>
+      style <span class="token operator">=</span> <span class="token keyword">undefined</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>style<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      style <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">createElement</span><span class="token punctuation">(</span><span class="token string">'style'</span><span class="token punctuation">)</span>
+      style<span class="token punctuation">.</span><span class="token function">setAttribute</span><span class="token punctuation">(</span><span class="token string">'type'</span><span class="token punctuation">,</span> <span class="token string">'text/css'</span><span class="token punctuation">)</span>
+      style<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> content
+      document<span class="token punctuation">.</span>head<span class="token punctuation">.</span><span class="token function">appendChild</span><span class="token punctuation">(</span>style<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      style<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> content
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+  sheetsMap<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>id<span class="token punctuation">,</span> style<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>updateStyle 中用到的核心 API 是 <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/CSSStyleSheet" target="_blank" rel="noopener noreferrer">CSSStyleSheet<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a>
+首先我们在 supportsConstructedSheet 中判断了当前浏览器是否支持 CSSStyleSheet, 如果不支持则采用 style 标签插入的形式挂载样式。
+如果支持则创建 CSSStyleSheet 实例。接着将编译后的 css 字符串传入 CSSStyleSheet 实例对象。再将该对象添加进 document.adoptedStyleSheet 就可以让我们的样式生效啦</p> <h2 id="解析-vue-文件"><a href="#解析-vue-文件" class="header-anchor">#</a> 解析 Vue 文件</h2> <p>Vite 在解析 .vue 文件主要做的还是 code transform 将 vue 组件解析成调用 compile 以及 render 方法的 js 文件。具体的 compile 以及 render 的核心逻辑还是在 vue3 的 api 中完成。</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token comment">// src/node/server/serverPluginVue.ts</span>
+<span class="token keyword">const</span> descriptor <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">parseSFC</span><span class="token punctuation">(</span>root<span class="token punctuation">,</span> filePath<span class="token punctuation">,</span> ctx<span class="token punctuation">.</span>body<span class="token punctuation">)</span>
+</code></pre></div><p>首先用官方提供的库来将单文件组件编译成 descriptor。以 App.vue 为例这里我们摘出比较重要的信息省略 sourcemap信息。</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token comment">// src/App.vue</span>
+<span class="token punctuation">{</span>
+  <span class="token literal-property property">filename</span><span class="token operator">:</span> <span class="token string">'/Users/yuuang/Desktop/github/vite_test/src/App.vue'</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">source</span><span class="token operator">:</span> <span class="token string">'&lt;template&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  &lt;img alt=&quot;Vue logo&quot; src=&quot;./assets/logo.png&quot; :class=&quot;style.big&quot;/&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  &lt;div class=&quot;small&quot;&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'    small1\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  &lt;/div&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  &lt;HelloWorld msg=&quot;Hello Vue 3.0 + Vite&quot; /&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'&lt;/template&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'\n'</span> <span class="token operator">+</span>
+    <span class="token string">'&lt;script&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">&quot;import HelloWorld from './components/HelloWorld.vue'\n&quot;</span> <span class="token operator">+</span>
+    <span class="token string">&quot;import style from './index.module.css'\n&quot;</span> <span class="token operator">+</span>
+    <span class="token string">'\n'</span> <span class="token operator">+</span>
+    <span class="token string">'export default {\n'</span> <span class="token operator">+</span>
+    <span class="token string">&quot;  name: 'App',\n&quot;</span> <span class="token operator">+</span>
+    <span class="token string">'  components: {\n'</span> <span class="token operator">+</span>
+    <span class="token string">'    HelloWorld\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  },\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  data() {\n'</span> <span class="token operator">+</span>
+    <span class="token string">'    return {\n'</span> <span class="token operator">+</span>
+    <span class="token string">'      style: style\n'</span> <span class="token operator">+</span>
+    <span class="token string">'    }\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  },\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  mounted () {\n'</span> <span class="token operator">+</span>
+    <span class="token string">&quot;    console.log('mounted')\n&quot;</span> <span class="token operator">+</span>
+    <span class="token string">'  }\n'</span> <span class="token operator">+</span>
+    <span class="token string">'}\n'</span> <span class="token operator">+</span>
+    <span class="token string">'&lt;/script&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'\n'</span> <span class="token operator">+</span>
+    <span class="token string">'&lt;style&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'.small {\n'</span> <span class="token operator">+</span>
+    <span class="token string">'  width:21px\n'</span> <span class="token operator">+</span>
+    <span class="token string">'}\n'</span> <span class="token operator">+</span>
+    <span class="token string">'&lt;/style&gt;\n'</span> <span class="token operator">+</span>
+    <span class="token string">'\n'</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">template</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token literal-property property">type</span><span class="token operator">:</span> <span class="token string">'template'</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">content</span><span class="token operator">:</span> <span class="token string">'\n'</span> <span class="token operator">+</span>
+      <span class="token string">'  &lt;img alt=&quot;Vue logo&quot; src=&quot;./assets/logo.png&quot; :class=&quot;style.big&quot;/&gt;\n'</span> <span class="token operator">+</span>
+      <span class="token string">'  &lt;div class=&quot;small&quot;&gt;\n'</span> <span class="token operator">+</span>
+      <span class="token string">'    small1\n'</span> <span class="token operator">+</span>
+      <span class="token string">'  &lt;/div&gt;\n'</span> <span class="token operator">+</span>
+      <span class="token string">'  &lt;HelloWorld msg=&quot;Hello Vue 3.0 + Vite&quot; /&gt;\n'</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">loc</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token literal-property property">source</span><span class="token operator">:</span> <span class="token string">'\n'</span> <span class="token operator">+</span>
+        <span class="token string">'  &lt;img alt=&quot;Vue logo&quot; src=&quot;./assets/logo.png&quot; :class=&quot;style.big&quot;/&gt;\n'</span> <span class="token operator">+</span>
+        <span class="token string">'  &lt;div class=&quot;small&quot;&gt;\n'</span> <span class="token operator">+</span>
+        <span class="token string">'    small1\n'</span> <span class="token operator">+</span>
+        <span class="token string">'  &lt;/div&gt;\n'</span> <span class="token operator">+</span>
+        <span class="token string">'  &lt;HelloWorld msg=&quot;Hello Vue 3.0 + Vite&quot; /&gt;\n'</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">start</span><span class="token operator">:</span> <span class="token punctuation">[</span>Object<span class="token punctuation">]</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">end</span><span class="token operator">:</span> <span class="token punctuation">[</span>Object<span class="token punctuation">]</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">attrs</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">map</span><span class="token operator">:</span> xxx
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">script</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token literal-property property">type</span><span class="token operator">:</span> <span class="token string">'script'</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">content</span><span class="token operator">:</span> <span class="token string">'\n'</span> <span class="token operator">+</span>
+      <span class="token string">&quot;import HelloWorld from './components/HelloWorld.vue'\n&quot;</span> <span class="token operator">+</span>
+      <span class="token string">&quot;import style from './index.module.css'\n&quot;</span> <span class="token operator">+</span>
+      <span class="token string">'\n'</span> <span class="token operator">+</span>
+      <span class="token string">'export default {\n'</span> <span class="token operator">+</span>
+      <span class="token string">&quot;  name: 'App',\n&quot;</span> <span class="token operator">+</span>
+      <span class="token string">'  components: {\n'</span> <span class="token operator">+</span>
+      <span class="token string">'    HelloWorld\n'</span> <span class="token operator">+</span>
+      <span class="token string">'  },\n'</span> <span class="token operator">+</span>
+      <span class="token string">'  data() {\n'</span> <span class="token operator">+</span>
+      <span class="token string">'    return {\n'</span> <span class="token operator">+</span>
+      <span class="token string">'      style: style\n'</span> <span class="token operator">+</span>
+      <span class="token string">'    }\n'</span> <span class="token operator">+</span>
+      <span class="token string">'  },\n'</span> 
+      <span class="token string">'}\n'</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">loc</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token literal-property property">source</span><span class="token operator">:</span> <span class="token string">'\n'</span> <span class="token operator">+</span>
+        <span class="token string">&quot;import HelloWorld from './components/HelloWorld.vue'\n&quot;</span> <span class="token operator">+</span>
+        <span class="token string">&quot;import style from './index.module.css'\n&quot;</span> <span class="token operator">+</span>
+        <span class="token string">'\n'</span> <span class="token operator">+</span>
+        <span class="token string">'export default {\n'</span> <span class="token operator">+</span>
+        <span class="token string">&quot;  name: 'App',\n&quot;</span> <span class="token operator">+</span>
+        <span class="token string">'  components: {\n'</span> <span class="token operator">+</span>
+        <span class="token string">'    HelloWorld\n'</span> <span class="token operator">+</span>
+        <span class="token string">'  },\n'</span> <span class="token operator">+</span>
+        <span class="token string">'  data() {\n'</span> <span class="token operator">+</span>
+        <span class="token string">'    return {\n'</span> <span class="token operator">+</span>
+        <span class="token string">'      style: style\n'</span> <span class="token operator">+</span>
+        <span class="token string">'    }\n'</span> <span class="token operator">+</span>
+        <span class="token string">'  },\n'</span> 
+        <span class="token string">'}\n'</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">start</span><span class="token operator">:</span> <span class="token punctuation">[</span>Object<span class="token punctuation">]</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">end</span><span class="token operator">:</span> <span class="token punctuation">[</span>Object<span class="token punctuation">]</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">attrs</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">map</span><span class="token operator">:</span> xxx
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">scriptSetup</span><span class="token operator">:</span> <span class="token keyword">null</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">styles</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+    <span class="token punctuation">{</span>
+      <span class="token literal-property property">type</span><span class="token operator">:</span> <span class="token string">'style'</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">content</span><span class="token operator">:</span> <span class="token string">'\n.small {\n  width:21px\n}\n'</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">loc</span><span class="token operator">:</span> <span class="token punctuation">[</span>Object<span class="token punctuation">]</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">attrs</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">map</span><span class="token operator">:</span> <span class="token punctuation">[</span>Object<span class="token punctuation">]</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">customBlocks</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>通过上述代码我们可以解析出一个组件的 descriptor。拿到解析结果后继续往下判断</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>query<span class="token punctuation">.</span>type<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// watch potentially out of root vue file since we do a custom read here</span>
+      <span class="token function">watchFileIfOutOfRoot</span><span class="token punctuation">(</span>watcher<span class="token punctuation">,</span> root<span class="token punctuation">,</span> filePath<span class="token punctuation">)</span>
+
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>descriptor<span class="token punctuation">.</span>script <span class="token operator">&amp;&amp;</span> descriptor<span class="token punctuation">.</span>script<span class="token punctuation">.</span>src<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        filePath <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">resolveSrcImport</span><span class="token punctuation">(</span>
+          root<span class="token punctuation">,</span>
+          descriptor<span class="token punctuation">.</span>script<span class="token punctuation">,</span>
+          ctx<span class="token punctuation">,</span>
+          resolver
+        <span class="token punctuation">)</span>
+      <span class="token punctuation">}</span>
+      ctx<span class="token punctuation">.</span>type <span class="token operator">=</span> <span class="token string">'js'</span>
+      <span class="token keyword">const</span> <span class="token punctuation">{</span> code<span class="token punctuation">,</span> map <span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">compileSFCMain</span><span class="token punctuation">(</span>
+        descriptor<span class="token punctuation">,</span>
+        filePath<span class="token punctuation">,</span>
+        publicPath<span class="token punctuation">,</span>
+        root
+      <span class="token punctuation">)</span>
+      ctx<span class="token punctuation">.</span>body <span class="token operator">=</span> code
+      ctx<span class="token punctuation">.</span>map <span class="token operator">=</span> map
+      <span class="token keyword">return</span> <span class="token function">etagCacheCheck</span><span class="token punctuation">(</span>ctx<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+
+</code></pre></div><p>首先是针对没有特定 query type 的请求。我们首先判断 script 标签有没有 src 属性。例如 <code>&lt;script src=&quot;./app.js&quot;&gt;&lt;/script&gt;</code> 将逻辑单独拆出一个文件进行维护。这种写法在 Vue 中比较少见也不推荐。Vue 推崇单文件组件的写法。接下来就是比较核心的 compileSFCMain 方法了</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">if</span> <span class="token punctuation">(</span>script<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  content <span class="token operator">=</span> script<span class="token punctuation">.</span>content
+  map <span class="token operator">=</span> script<span class="token punctuation">.</span>map
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>script<span class="token punctuation">.</span>lang <span class="token operator">===</span> <span class="token string">'ts'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> res <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">transform</span><span class="token punctuation">(</span>content<span class="token punctuation">,</span> publicPath<span class="token punctuation">,</span> <span class="token punctuation">{</span>
+      <span class="token literal-property property">loader</span><span class="token operator">:</span> <span class="token string">'ts'</span>
+    <span class="token punctuation">}</span><span class="token punctuation">)</span>
+    content <span class="token operator">=</span> res<span class="token punctuation">.</span>code
+    map <span class="token operator">=</span> <span class="token function">mergeSourceMap</span><span class="token punctuation">(</span>map<span class="token punctuation">,</span> <span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>res<span class="token punctuation">.</span>map<span class="token operator">!</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span class="token comment">/**
+ * Utility for rewriting `export default` in a script block into a varaible
+ * declaration so that we can inject things into it
+ */</span>
+code <span class="token operator">+=</span> <span class="token function">rewriteDefault</span><span class="token punctuation">(</span>content<span class="token punctuation">,</span> <span class="token string">'__script'</span><span class="token punctuation">)</span>
+</code></pre></div><p>首先判断如果是 ts 文件则先调用 esbuild 来将 ts 转换为 js。接着使用 rewriteDefault 来重写 export default 的内容到一个变量中。在这里是 <code>__script</code>。做完之后 code 的内容为</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">import</span> HelloWorld <span class="token keyword">from</span> <span class="token string">'./components/HelloWorld.vue'</span>
+<span class="token keyword">import</span> style <span class="token keyword">from</span> <span class="token string">'./index.module.css'</span>
+
+<span class="token keyword">const</span> __script <span class="token operator">=</span> <span class="token punctuation">{</span>
+  <span class="token literal-property property">name</span><span class="token operator">:</span> <span class="token string">'App'</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">components</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    HelloWorld
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token function">data</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">{</span>
+      <span class="token literal-property property">style</span><span class="token operator">:</span> style
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+
+<span class="token keyword">import</span> HelloWorld <span class="token keyword">from</span> <span class="token string">'./components/HelloWorld.vue'</span>
+<span class="token keyword">import</span> style <span class="token keyword">from</span> <span class="token string">'./index.module.css'</span>
+
+<span class="token keyword">const</span> __script <span class="token operator">=</span> <span class="token punctuation">{</span>
+  <span class="token literal-property property">name</span><span class="token operator">:</span> <span class="token string">'App'</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">components</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    HelloWorld
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token function">data</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">{</span>
+      <span class="token literal-property property">style</span><span class="token operator">:</span> style
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">import</span> <span class="token punctuation">{</span> render <span class="token keyword">as</span> __render <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">&quot;/src/App.vue?type=template&quot;</span>
+__script<span class="token punctuation">.</span>render <span class="token operator">=</span> __render
+__script<span class="token punctuation">.</span>__hmrId <span class="token operator">=</span> <span class="token string">&quot;/src/App.vue&quot;</span>
+__script<span class="token punctuation">.</span>__file <span class="token operator">=</span> <span class="token string">&quot;/Users/yuuang/Desktop/github/vite_test/src/App.vue&quot;</span>
+<span class="token keyword">export</span> <span class="token keyword">default</span> __script
+</code></pre></div><p>接着我们判断组件当中有没有 style 标签</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">if</span> <span class="token punctuation">(</span>descriptor<span class="token punctuation">.</span>styles<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    descriptor<span class="token punctuation">.</span>styles<span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">s<span class="token punctuation">,</span> i</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+      <span class="token keyword">const</span> styleRequest <span class="token operator">=</span> publicPath <span class="token operator">+</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">?type=style&amp;index=</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>i<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>s<span class="token punctuation">.</span>scoped<span class="token punctuation">)</span> hasScoped <span class="token operator">=</span> <span class="token boolean">true</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>s<span class="token punctuation">.</span>module<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>hasCSSModules<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+          code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\nconst __cssModules = __script.__cssModules = {}</span><span class="token template-punctuation string">`</span></span>
+          hasCSSModules <span class="token operator">=</span> <span class="token boolean">true</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">const</span> styleVar <span class="token operator">=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">__style</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>i<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+        <span class="token keyword">const</span> moduleName <span class="token operator">=</span> <span class="token keyword">typeof</span> s<span class="token punctuation">.</span>module <span class="token operator">===</span> <span class="token string">'string'</span> <span class="token operator">?</span> s<span class="token punctuation">.</span>module <span class="token operator">:</span> <span class="token string">'$style'</span>
+        code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\nimport </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>styleVar<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string"> from </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>
+          styleRequest <span class="token operator">+</span> <span class="token string">'&amp;module'</span>
+        <span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+        code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\n__cssModules[</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>moduleName<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">] = </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>styleVar<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+      <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+        code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\nimport </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>styleRequest<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>hasScoped<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\n__script.__scopeId = &quot;data-v-</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>id<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">&quot;</span><span class="token template-punctuation string">`</span></span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+</code></pre></div><p>首先判断有没有使用 css-modules 例如 <code>&lt;style module&gt; xxx &lt;/style&gt;</code>。如果使用了则在 code 中注入 <code>\nconst __cssModules = __script.__cssModules = {}</code> 并且在 script 头部插入 <code>import $style from './index.module.css'</code> 这样的代码。这样我们就可以直接在 template 中使用 $style.xxx 来使用 css-modules。<br>
+如果是普通的样式文件则直接注入 <code>\nimport ${JSON.stringify(styleRequest)}</code> 在 App.vue 中则是 <code>import &quot;/src/App.vue?type=style&amp;index=0&quot;</code></p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">if</span> <span class="token punctuation">(</span>descriptor<span class="token punctuation">.</span>template<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> templateRequest <span class="token operator">=</span> publicPath <span class="token operator">+</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">?type=template</span><span class="token template-punctuation string">`</span></span>
+    code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\nimport { render as __render } from </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>
+      templateRequest
+    <span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+    code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\n__script.render = __render</span><span class="token template-punctuation string">`</span></span>
+  <span class="token punctuation">}</span>
+</code></pre></div><p>接下来判断如果有 template 则注入 type 为 template 的 import 脚本用来发起请求。在 App.vue 中是 <code>import {render as __render} from &quot;/src/App.vue?type=template&quot;</code><br>
+最后注入一些辅助信息</p> <div class="language-js extra-class"><pre class="language-js"><code>code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\n__script.__hmrId = </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>publicPath<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+  code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\n__script.__file = </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>filePath<span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+  code <span class="token operator">+=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\nexport default __script</span><span class="token template-punctuation string">`</span></span>
+</code></pre></div><p>最终的完整信息如下</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">import</span> HelloWorld <span class="token keyword">from</span> <span class="token string">'/src/components/HelloWorld.vue'</span>
+<span class="token keyword">import</span> style <span class="token keyword">from</span> <span class="token string">'/src/index.module.css?import'</span>
+
+<span class="token keyword">const</span> __script <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token literal-property property">name</span><span class="token operator">:</span> <span class="token string">'App'</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">components</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        HelloWorld
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token function">data</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token punctuation">{</span>
+            <span class="token literal-property property">style</span><span class="token operator">:</span> style
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">import</span> <span class="token string">&quot;/src/App.vue?type=style&amp;index=0&quot;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span>render <span class="token keyword">as</span> __render<span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">&quot;/src/App.vue?type=template&quot;</span>
+__script<span class="token punctuation">.</span>render <span class="token operator">=</span> __render
+__script<span class="token punctuation">.</span>__hmrId <span class="token operator">=</span> <span class="token string">&quot;/src/App.vue&quot;</span>
+__script<span class="token punctuation">.</span>__file <span class="token operator">=</span> <span class="token string">&quot;/Users/yuuang/Desktop/github/vite_test/src/App.vue&quot;</span>
+<span class="token keyword">export</span> <span class="token keyword">default</span> __script
+</code></pre></div><p>拿到 compileSFCMain 的返回结果后。返回给 ctx.body 渲染。接着由于我们在上面将请求类型划分为了 <code>template</code>, <code>style</code> 接下来看看我们如何处理各种类型的请求。</p> <div class="language-js extra-class"><pre class="language-js"><code> <span class="token keyword">if</span> <span class="token punctuation">(</span>query<span class="token punctuation">.</span>type <span class="token operator">===</span> <span class="token string">'template'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">const</span> templateBlock <span class="token operator">=</span> descriptor<span class="token punctuation">.</span>template<span class="token operator">!</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>templateBlock<span class="token punctuation">.</span>src<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        filePath <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">resolveSrcImport</span><span class="token punctuation">(</span>root<span class="token punctuation">,</span> templateBlock<span class="token punctuation">,</span> ctx<span class="token punctuation">,</span> resolver<span class="token punctuation">)</span>
+      <span class="token punctuation">}</span>
+      ctx<span class="token punctuation">.</span>type <span class="token operator">=</span> <span class="token string">'js'</span>
+      <span class="token keyword">const</span> cached <span class="token operator">=</span> vueCache<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>filePath<span class="token punctuation">)</span>
+      <span class="token keyword">const</span> bindingMetadata <span class="token operator">=</span> cached <span class="token operator">&amp;&amp;</span> cached<span class="token punctuation">.</span>script <span class="token operator">&amp;&amp;</span> cached<span class="token punctuation">.</span>script<span class="token punctuation">.</span>bindings
+      <span class="token keyword">const</span> vueSpecifier <span class="token operator">=</span> <span class="token function">resolveBareModuleRequest</span><span class="token punctuation">(</span>
+        root<span class="token punctuation">,</span>
+        <span class="token string">'vue'</span><span class="token punctuation">,</span>
+        publicPath<span class="token punctuation">,</span>
+        resolver
+      <span class="token punctuation">)</span>
+      <span class="token keyword">const</span> <span class="token punctuation">{</span> code<span class="token punctuation">,</span> map <span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token function">compileSFCTemplate</span><span class="token punctuation">(</span>
+        root<span class="token punctuation">,</span>
+        templateBlock<span class="token punctuation">,</span>
+        filePath<span class="token punctuation">,</span>
+        publicPath<span class="token punctuation">,</span>
+        descriptor<span class="token punctuation">.</span>styles<span class="token punctuation">.</span><span class="token function">some</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token parameter">s</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> s<span class="token punctuation">.</span>scoped<span class="token punctuation">)</span><span class="token punctuation">,</span>
+        bindingMetadata<span class="token punctuation">,</span>
+        vueSpecifier<span class="token punctuation">,</span>
+        config
+      <span class="token punctuation">)</span>
+      ctx<span class="token punctuation">.</span>body <span class="token operator">=</span> code
+      ctx<span class="token punctuation">.</span>map <span class="token operator">=</span> map
+      <span class="token keyword">return</span> <span class="token function">etagCacheCheck</span><span class="token punctuation">(</span>ctx<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+</code></pre></div><p>当 type 为 template 时，我们只需要取 descriptor 的 template 字段。首先判断有没有 src 属性来引用单独拆出来的文件。这种情况使用的也比较少。<br>
+核心的方法调用是 compileSFCTemplate 来将 template 编译成官方提供的 h函数(render 函数)来生成 vnode 进行渲染。</p> <div class="language-js extra-class"><pre class="language-js"><code><span class="token keyword">if</span> <span class="token punctuation">(</span>query<span class="token punctuation">.</span>type <span class="token operator">===</span> <span class="token string">'style'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">const</span> index <span class="token operator">=</span> <span class="token function">Number</span><span class="token punctuation">(</span>query<span class="token punctuation">.</span>index<span class="token punctuation">)</span>
+      <span class="token keyword">const</span> styleBlock <span class="token operator">=</span> descriptor<span class="token punctuation">.</span>styles<span class="token punctuation">[</span>index<span class="token punctuation">]</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>styleBlock<span class="token punctuation">.</span>src<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        filePath <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">resolveSrcImport</span><span class="token punctuation">(</span>root<span class="token punctuation">,</span> styleBlock<span class="token punctuation">,</span> ctx<span class="token punctuation">,</span> resolver<span class="token punctuation">)</span>
+      <span class="token punctuation">}</span>
+      <span class="token keyword">const</span> id <span class="token operator">=</span> <span class="token function">hash_sum</span><span class="token punctuation">(</span>publicPath<span class="token punctuation">)</span>
+      <span class="token keyword">const</span> result <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">compileSFCStyle</span><span class="token punctuation">(</span>
+        root<span class="token punctuation">,</span>
+        styleBlock<span class="token punctuation">,</span>
+        index<span class="token punctuation">,</span>
+        filePath<span class="token punctuation">,</span>
+        publicPath<span class="token punctuation">,</span>
+        config
+      <span class="token punctuation">)</span>
+      ctx<span class="token punctuation">.</span>type <span class="token operator">=</span> <span class="token string">'js'</span>
+      ctx<span class="token punctuation">.</span>body <span class="token operator">=</span> <span class="token function">codegenCss</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>id<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">-</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>index<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span> result<span class="token punctuation">.</span>code<span class="token punctuation">,</span> result<span class="token punctuation">.</span>modules<span class="token punctuation">)</span>
+      <span class="token keyword">return</span> <span class="token function">etagCacheCheck</span><span class="token punctuation">(</span>ctx<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+</code></pre></div><p>类型为 style 的请求类似。我们只需要使用 descriptor 的 styles 字段。使用 compileSFCStyle 来进行一些 @import 关键字的处理。最后使用 codegenCss 在外面包上一层调用客户端提供的 <code>updateStyle</code> 方法即可。</p></div> <footer class="page-edit"><!----> <!----></footer> <div class="page-nav"><p class="inner"><span class="prev">
+      ←
+      <a href="/guide/optimize.html" class="prev">
+        预优化
+      </a></span> <span class="next"><a href="/guide/hmr.html">
+        热替换
+      </a>
+      →
+    </span></p></div> </main></div><div class="global-ui"><!----></div></div>
+    <script src="/assets/js/app.039410b3.js" defer></script><script src="/assets/js/2.ada7b47c.js" defer></script><script src="/assets/js/9.82ee3f19.js" defer></script>
+  </body>
+</html>
