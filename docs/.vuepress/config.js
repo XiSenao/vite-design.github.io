@@ -16,7 +16,7 @@ module.exports = {
    * ref：https://v1.vuepress.vuejs.org/config/#head
    */
   head: [
-    ['meta', { name: 'keywords', itemprop: 'keywords', content: 'vite 源码分析 Vue 前端开发,Vue.js,vue-cli' }],
+    ['meta', { name: 'keywords', itemprop: 'keywords', content: 'vite 源码分析, rollup 打包流程' }],
     ['meta', { property: 'og:title', content: 'vite 源码分析' }],
     ['meta', { property: 'og:description', content: 'vite vue 源码分析 一个基于 Vue3 单文件组件的非打包开发服务器' }],
   ],
@@ -45,9 +45,8 @@ module.exports = {
     sidebar: {
       '/guide/': [
         {
-          collapsable: false,
+          collapsable: true,
           children: [
-            '',
             'chinese-doc',
             'getting-start',
             'module-resolve',
