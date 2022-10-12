@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vuepress dev docs",
     "build": "vuepress build docs",
-    "publish": "npm run build && surge ./docs/.vuepress/dist vite-design.surge.sh",
+    "publish": "npm run build && surge ./docs/.vuepress/dist vite-design.xisenao.surge.sh",
     "deploy": "rm -rf build && mkdir build && npm run build && cp -r docs/.vuepress/dist/* ./build && midway-bin deploy --skipBuild"
   },
   "devDependencies": {

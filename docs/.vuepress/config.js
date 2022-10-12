@@ -39,7 +39,7 @@ module.exports = {
       },
       {
         text: 'Github',
-        link: 'https://github.com/zhangyuang/vite-design',
+        link: 'https://github.com/FinalAshen/vite-design.github.io',
       },
     ],
     sidebar: {

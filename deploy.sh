@@ -14,7 +14,7 @@ cd docs/.vuepress/dist
 
 git init
 git add -A
-git commit -m 'deploy'
+git commit -m 'init project'
 
 # 如果发布到 https://<USERNAME>.github.io
 git push -f git@github.com:FinalAshen/vite-design.github.io.git master

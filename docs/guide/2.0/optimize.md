@@ -63,16 +63,15 @@ await esbuildService.build({
 
 ### entryPoints
 
-首先是 `entryPoints` 就是打包的入口，这里我们先不用管 Vite 到底是怎么去收集模块依赖的。我们后续章节会分析。只需要知道默认的 example 中 `flatIdDeps` 大概长下面这样。
+`esbuild` 处理依赖预构建的入口, `Vite` 在处理依赖预构建的时候会将 `bare id` 进行扁平化处理(若不进行扁平化, 那么 `react/jsx-runtime` 就会打包成 `node_modules` -> `react` -> `jsx-runtime`, 增加路径解析复杂度), 但是esbuild无法得知扁平化后的路径具体指的是哪个路径，因此写了 `vite:dep-pre-bundle` 插件来做模块路径映射处理。因此 `entryPoints` 会影响打包产物的格式。
 
 ```js
 {
-  vue: '/Users/yuuang/Desktop/my-vue-app/node_modules/vue/dist/vue.runtime.esm-bundler.js'
+  'react_jsx-runtime': '/Users/Project/vite/packages/vite/demo/node_modules/react/jsx-runtime.js'
 }
 ```
 
-Vite 将会根据 `module`, `jsnext:main`, `jsnext` 这样的字段顺序来查找最终解析的文件的绝对路径。比如 Vue 的 module 字段指向 `dist/vue.runtime.esm-bundler.js`, 所以最终的到的对象就是上述所示。  
-这里取的是 Object.keys 也就是 `entryPoints: ['vue']` 的形式，当你的应用还依赖其他模块时，就会是一个模块依赖数组例如 `entryPoints: ['vue', 'vue-router']`。
+`Vite` 通过 `alias` 和 `vite:resolve` 插件来解析 `bare id` 并获取模块实际的绝对路径。
 
 ### bundle
 
@@ -237,18 +236,18 @@ build.onResolve(
 )
 ```
 
-### dep 处理
+### vite:dep-pre-bundle
 
-这块的工作基本上是预优化的核心内容。这里 Vite 只干了一件事情，就是生成了一个代理模块来导出原模块的原始 id。
-举个例子，上面我们提到了 Vite 会把入口模块交给 namespace 为 `dep` 的流程去做进一步的处理。且只传递给了一个最原始的 Bare id。
-Vite 在这里用 esbuild 提供的 parse 词法分析逻辑来分析入口模块的 import, export 信息
-当入口模块即没有 `import` 关键字 也没有 `export` 关键字时，我们认为它是一个 cjs 模块。生成的代理模块的格式如下
+这块的工作基本上是预优化的核心内容。这里 Vite 只干了一件事情，就是生成了一个虚拟模块来导出原模块的原始 id。
+举个例子，上面我们提到了 Vite 会把入口模块交给 namespace 为 `dep` 的流程去做进一步的处理。且只传递给了一个最原始的 Bare id (代码中引入的模块, `import runtime from 'react/jsx-runtime'`, `react/jsx-runtime` 即为 Bare id )。
+Vite 在处理预构建模块的时候会获取模块的 `exportData` (导入和导出信息), 通过 `es-module-lexer` 包来获取模块的导入和导出信息，不过需要注意的是, `es-module-lexer` 包在处理含 `jsx` 模块的时候会报错, 因此 Vite 在解析报错的时候(`catch` 到)会通过 `esbuild` 配置 jsx loader 来解析 `jsx` 模块, `transfrom` 完成之后再使用 `es-module-lexer` 包解析模块获取模块的导入和导出信息。
+当入口模块即没有 `import` 关键字 也没有 `export` 关键字时，我们认为它是一个 `cjs` 模块。生成的代理模块的格式如下:
 
 ```js
 contents += `export default require("${relativePath}");`
 ```
 
-当入口模块使用 `export default ` 进行导出时，我们生成的代理模块的格式如下
+当入口模块使用 `export default` 进行导出时，我们生成的代理模块的格式如下
 
 ```js
 contents += `import d from "${relativePath}";export default d;`
@@ -256,49 +255,16 @@ contents += `import d from "${relativePath}";export default d;`
 
 当入口模块存在 `ReExports` 时，比如 `export * from './xxx.js'` 或者 `export` 关键字出现的次数大于1，或者不存在 `export default`的时候生成的代理模块的格式如下
 这也是大多数符合标准的模块最终处理完成的格式。
+
 ```js
 contents += `\nexport * from "${relativePath}"`
 ```
 
 以 Vue 为例，当我们处理完之后。执行 `import Vue from 'vue'` 时，`'vue'` 实际返回的 contents 是 `export * from "./node_modules/vue/dist/vue.runtime.esm-bundler.js"`
 
-通过注释，我们可以看出这样做的目的有两个
-
-- 使 esbuild 最终输出符合期望的结构
-- 如果不分离代理模块和真实模块，esbuild 可能会重复打包相同模块
-
-对于第一个原因，我自己调试的时候测试了一下，如果不交给 dep 去处理，生成的最终格式是什么样的。  
-
-- 当我们使用 dep 时，生成的最终文件在 cache 目录是 `node_modules/vite/vue.js`  
-- 不使用 dep 时，生成的最终文件在 cache 目录是 `node_modules/vite/vue.runtime.esm-bundler.js`，此时应用会提示找不到 Vue 文件。  
-
-且当我们入口模块超过一个时，例如存在 `['vue', 'vue-router']` 的时候，不使用 dep 的话将会生成带有文件夹的结构。
-
-```bash
-$ tree node_modules/.vite
-node_modules/.vite
-├── _esbuild.json
-├── _metadata.json
-├── vue
-│   └── dist
-│       └── vue.runtime.esm-bundler.js
-└── vue-router
-    └── dist
-        └── vue-router.esm.js
-```
-
-于是我猜想 Vite 这么干是为了方便上层统一处理，否则生成文件名称文件结构都是不一定的会增加处理的难度。  
-对于第二个原因，按照注释所说是因为真实的模块可能会通过相对引用的方式被导入会造成重复打包，我尝试了几种测试用例没能够复现，可能是对这块具体意思的理解不准确。希望看到这篇文章的人有兴趣可以去分析一下并且提交 PR 来更新本文档。
+具体源码如下
 
 ```js
- // For entry files, we'll read it ourselves and construct a proxy module
-// to retain the entry's raw id instead of file path so that esbuild
-// outputs desired output file structure.
-// It is necessary to do the re-exporting to separate the virtual proxy
-// module from the actual module since the actual module may get
-// referenced via relative imports - if we don't separate the proxy and
-// the actual module, esbuild will create duplicated copies of the same
-// module!
 const root = path.resolve(config.root)
 build.onLoad({ filter: /.*/, namespace: 'dep' }, ({ path: id }) => {
   const entryFile = qualified[id]
@@ -337,6 +303,52 @@ build.onLoad({ filter: /.*/, namespace: 'dep' }, ({ path: id }) => {
 })
 ```
 
+#### 到这肯定会有很大一部分疑惑，为什么需要专门设计虚拟模块(dep)来进行处理呢?
+
+通过以下注释
+
+```js
+// For entry files, we'll read it ourselves and construct a proxy module
+// to retain the entry's raw id instead of file path so that esbuild
+// outputs desired output file structure.
+// It is necessary to do the re-exporting to separate the virtual proxy
+// module from the actual module since the actual module may get
+// referenced via relative imports - if we don't separate the proxy and
+// the actual module, esbuild will create duplicated copies of the same
+// module!
+```
+
+我们可以看出这样设计的目的有两个
+
+- 使 `esbuild` 最终输出符合期望的结构
+- 如果不分离虚拟模块和真实模块，`esbuild` 可能会重复打包相同模块
+
+经过测试可以发现在 `esbuild` 新版本( `0.15.10` )中，产物输出的结构和 `entryPoints` 有关，因此通过插件直接重写路径(具体的模块路径)不会出现输出结构不符合期望的问题而也不会存在重复打包模块的问题。但是针对注释所处的 `esbuild` 版本( `0.8.34` )来说，测试的时候发现输出的结构和 `path` 有关系，因此不能直接通过插件重写路径，会存在非扁平化的效果，那么就想不改变 `path`，`path` 依旧为扁平化，通过 `load hook` 来读取模块的信息。结果通过 `fs` 读模块对于 `esbuild` 来说不可感知是否是同一模块，因此会导致打包重复产物的问题。那么 `fs` 这一条路就行不通了，后来就考虑可以通过重导出来的方式来进行 `load` 处理。这样就同时解决了产物非扁平化问题和重复打包模块的问题。
+![预构建产物非扁平化](../../images/dep-unflatten.png)
+
+```bash
+.vite
+└── deps_build-dist_temp
+    ├── chunk-CE3JUPYM.js
+    ....
+    ├── chunk-UUP7NEEN.js.map
+    ├── node_modules
+    │   └── react
+    │       ├── index.js
+    │       ├── index.js.map
+    │       ├── jsx-dev-runtime.js
+    │       ├── jsx-dev-runtime.js.map
+    │       ├── jsx-runtime.js
+    │       └── jsx-runtime.js.map
+    ├── package.json
+    └── src
+        ├── commonjs.js
+        ├── commonjs.js.map
+        ├── demo.js
+        ├── demo.js.map
+        ├── demo1.js
+        └── demo1.js.map
+```
 
 ## esm 工具
 
