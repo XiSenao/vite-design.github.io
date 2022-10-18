@@ -1438,16 +1438,21 @@ index.html
 ```bash
 vite v3.0.0-beta.5 building for production...
 index.html 模块开始获取信息
-index.html 模块源码加载 --- 结束: 1.442ms
+index.html 模块源码加载 --- 结束: 1.436ms
 index.html 模块 transfrom 处理阶段 ---- 开始
+vite:optimized-deps-build plugin ---- transfrom: index.html
+注册模块ID: index.html
 transforming (1) index.html
 index.html 模块 transfrom 处理阶段 ---- 结束
 index.html 模块获取所有子依赖模块 ---- 开始
 index.html  模块 loadPromise 解析完成, 剩余注册ID:  []
 modulepreload-polyfill 模块开始获取信息
 index.js 模块开始获取信息
-modulepreload-polyfill 模块源码加载 --- 结束: 0.401ms
+modulepreload-polyfill 模块源码加载 --- 结束: 0.375ms
 modulepreload-polyfill 模块 transfrom 处理阶段 ---- 开始
+vite:optimized-deps-build plugin ---- transfrom: modulepreload-polyfill
+注册模块ID: modulepreload-polyfill
+
 modulepreload-polyfill 模块 transfrom 处理阶段 ---- 结束
 modulepreload-polyfill 模块获取所有子依赖模块 ---- 开始
 modulepreload-polyfill 模块获取所有子依赖模块 ---- 完成
@@ -1455,47 +1460,55 @@ index.html 模块进入 afterLoad 回调, 剩余注册ID:  [ 'vite/modulepreload
 modulepreload-polyfill  模块 loadPromise 解析完成, 剩余注册ID:  []
 modulepreload-polyfill 模块进入 afterLoad 回调, 剩余注册ID:  []
 ----- debouncedProcessing -----
-距入口模块加载完成的时间: 201.743ms
+距入口模块加载完成的时间: 201.662ms
 
 ～～～～～～～～～～～～开启预构建流程～～～～～～～～～～～～
+
 预构建扁平化ID 和 模块绝对路径的映射关系:  {
-  'react_jsx-runtime': '/Users/Project/vite/packages/vite/demo/node_modules/react/jsx-runtime.js',
-  'react_jsx-dev-runtime': '/Users/Project/vite/packages/vite/demo/node_modules/react/jsx-dev-runtime.js'
+  'react_jsx-runtime': '/Users/chenjiaxiang/Project/vite/packages/vite/demo/node_modules/react/jsx-runtime.js',
+  'react_jsx-dev-runtime': '/Users/chenjiaxiang/Project/vite/packages/vite/demo/node_modules/react/jsx-dev-runtime.js'
 }
 
-index.js 模块源码加载 --- 结束: 393.874ms
+index.js 模块源码加载 --- 结束: 427.531ms
 index.js 模块 transfrom 处理阶段 ---- 开始
+vite:optimized-deps-build plugin ---- transfrom: index.js
+注册模块ID: index.js
 ----- debouncedProcessing -----
 transforming (3) src/index.js
 index.js 模块 transfrom 处理阶段 ---- 结束
 index.js 模块获取所有子依赖模块 ---- 开始
-index.js 模块 loadPromise 解析完成, 剩余注册ID:  []
+index.js  模块 loadPromise 解析完成, 剩余注册ID:  []
 react.js 模块开始获取信息
 
 ～～～～～～～～～～～～开启预构建流程～～～～～～～～～～～～
+
 预构建扁平化ID 和 模块绝对路径的映射关系:  {
-  'react_jsx-runtime': '/Users/Project/vite/packages/vite/demo/node_modules/react/jsx-runtime.js',
-  'react_jsx-dev-runtime': '/Users/Project/vite/packages/vite/demo/node_modules/react/jsx-dev-runtime.js',
-  react: '/Users/Project/vite/packages/vite/demo/node_modules/react/index.js'
+  'react_jsx-runtime': '/Users/chenjiaxiang/Project/vite/packages/vite/demo/node_modules/react/jsx-runtime.js',
+  'react_jsx-dev-runtime': '/Users/chenjiaxiang/Project/vite/packages/vite/demo/node_modules/react/jsx-dev-runtime.js',
+  react: '/Users/chenjiaxiang/Project/vite/packages/vite/demo/node_modules/react/index.js'
 }
 
 index.js 模块进入 afterLoad 回调, 剩余注册ID:  []
-7:40:27 PM [vite] ✨ new dependencies optimized: react
-7:40:27 PM [vite] ✨ optimized dependencies changed. reloading
-react.js 模块源码加载 --- 结束: 136.372ms
+2:13:45 PM [vite] ✨ new dependencies optimized: react
+2:13:45 PM [vite] ✨ optimized dependencies changed. reloading
+react.js 模块源码加载 --- 结束: 138.769ms
 react.js 模块 transfrom 处理阶段 ---- 开始
+vite:optimized-deps-build plugin ---- transfrom: react.js
 transforming (4) node_modules/.vite/deps_build-dist/react.js
 react.js 模块 transfrom 处理阶段 ---- 结束
 react.js 模块获取所有子依赖模块 ---- 开始
 chunk-BC7EONZ4.js?v=d4c32311 模块开始获取信息
-chunk-BC7EONZ4.js?v=d4c32311 模块源码加载 --- 结束: 0.597ms
+chunk-BC7EONZ4.js?v=d4c32311 模块源码加载 --- 结束: 0.333ms
 chunk-BC7EONZ4.js?v=d4c32311 模块 transfrom 处理阶段 ---- 开始
+vite:optimized-deps-build plugin ---- transfrom: chunk-BC7EONZ4.js?v=d4c32311
+
 chunk-BC7EONZ4.js?v=d4c32311 模块 transfrom 处理阶段 ---- 结束
 chunk-BC7EONZ4.js?v=d4c32311 模块获取所有子依赖模块 ---- 开始
 chunk-BC7EONZ4.js?v=d4c32311 模块获取所有子依赖模块 ---- 完成
 react.js 模块获取所有子依赖模块 ---- 完成
 index.js 模块获取所有子依赖模块 ---- 完成
 index.html 模块获取所有子依赖模块 ---- 完成
+
 ✓ 5 modules transformed.
 ```
 
@@ -1505,7 +1518,7 @@ index.html 模块获取所有子依赖模块 ---- 完成
 this.ast = new Program(ast, { context: this.astContext, type: 'Module' }, this.scope);
 ```
 
-这是 `ast` 构建的过程，`rollup` 在内部写了大量 `ast node constructor`。
+这是 **`ast`** 构建的过程，**`rollup`** 在内部实现了大量 **`node constructor`**。
 
 ```js
 const nodeConstructors = {
@@ -1582,11 +1595,45 @@ const nodeConstructors = {
 };
 ```
 
-因此 **`rollup`** 在解析大模块代码的时候会根据 **`代码ast结构`** 实例化 **`node constructor`**。那么对于 `335.7 MB` 的大型模块代码量大约在 **`1350w`** 行代码量，估计得有 **`675w`** 的实例化。对于 `V8 JS Runtime` 来说，提供老生代的空间大小约 `1.4G`, 也就是说均摊在每一个实例上为 `222B` 的大小，因此肯定是会溢出。
+构建流程后续会进行补充，简单来说 **`rollup`** 在解析代码的时候会根据 **`acorn`** 生成的 **`ast结构`** 来实例化 **`node constructor`**。那么对于 **`335.7 MB`** 的大型模块代码量来说，其代码量约在 **`1350w`** 行，至少评估需要 **`675w`** 的实例化。对于 **`V8 JS Runtime`** 来说，提供老生代的空间大小约 **`1.4G`**，也就是说均摊在每一个实例上为 **`222B`** 的大小，溢出是难以避免的。
 
 ::: tip
 这是我对延迟预构建流程写了简单的 **`demo`** 来助于理解整个流程
 [pre-fetch-line](https://github.com/XiSenao/vite-design.github.io/blob/master/docs/demo/pre-fetch-line.js) 。
 :::
 
+::: warning
+这里有一个点需要注意的是，在 **`vite:build-import-analysis`**  插件的 **`transfrom`** 阶段会试着去发现新的预构建模块。在 **`registerMissingImport`** 函数中有如下一段代码
+
+```js
+// Until the first optimize run is called, avoid triggering processing
+// We'll wait until the user codebase is eagerly processed by Vite so
+// we can get a list of every missing dependency before giving to the
+// browser a dependency that may be outdated, thus avoiding full page reloads
+if (scan || firstRunCalled) {
+  // Debounced rerun, let other missing dependencies be discovered before
+  // the running next optimizeDeps
+  debouncedProcessing();
+}
+```
+
+可以看出在发现新预构建模块的时候， **`Vite`** 会试着进行 **`防抖`** (可能在短时间内发现多个)预构建处理。综合可知若存在如下项目构建结构
+
+```bash
+index.html
+    ├── a.js
+        └── react.js
+    ├── b.js
+    └── c.js
+```
+
+假设 **`registeredIds`** 注册和 **`afterLoad`** 回调执行的时机均按照正常流程执行，即确保 **`getDepsOptimizer(config).run()`** 预构建最后执行。但是每一个模块构建模块的时间耗费都很极限，如果没有 **`registerMissingImport`** 中的防抖预构建处理，那么根据这种情况 **`react`** 模块只能等到最后执行预构建流程，而优化的效果使得预构建流程不受模块构建的影响。
+
+:::
+
 ### 开发环境
+
+### 存在的问题
+
+1. [moment](https://github.com/vueComponent/ant-design-vue/issues/4722) 带来的影响
+   从这个 [issue](https://github.com/vueComponent/ant-design-vue/issues/4722) 中可以看出来 `esbuild` 对于 `import * as moment from 'moment'` 的解析上还存在问题，构建出的产物为 `void 0`。
