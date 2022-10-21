@@ -515,7 +515,7 @@ class NodeBase extends ExpressionEntity {
 }
 ```
 
-由上述代码可以很清晰的了解到构建 `ast` 的时候**主要**会执行 `构建可执行上下文`、`根据 ast 类型实例化 node constructor`、`根据 ast node 信息来初始化 node constructor 实例`。
+由上述代码可以很清晰的了解到构建 `ast` 的时候**主要**会执行 `构建可执行上下文`、`实例化 node constructor`、`初始化 node constructor 实例`。
 
 #### 构建可执行上下文
 
@@ -599,11 +599,703 @@ class ClassNode extends NodeBase {
 
 作用域构造函数最终均会继承于 `Scope$1` 基类。在不同场景下会构建对应的作用域，后续遇到声明的时候会构建 `variable` 对象，并将对象存储在对应的上下文中。
 
+#### 实例化 node constructor
 
+递归 `ast` 并实例化对应的节点。在阅读这一块源码的同时，推荐借助于 [AST Explorer](https://astexplorer.net/) 来协助阅读，可以很清晰的看出`ast node` 具体对应于哪一段 `code`。
+
+```js
+class NodeBase extends ExpressionEntity {
+  parseNode(esTreeNode) {
+    for (const [key, value] of Object.entries(esTreeNode)) {
+      // That way, we can override this function to add custom initialisation and then call super.parseNode
+      // 处理过的 key 就不需要再处理一遍
+      if (this.hasOwnProperty(key))
+        continue;
+      // 对于特殊 ast node 做特殊处理。
+      if (key.charCodeAt(0) === 95 /* _ */) {
+        if (key === ANNOTATION_KEY) {
+          this.annotations = value;
+        }
+        else if (key === INVALID_COMMENT_KEY) {
+          for (const { start, end } of value)
+            this.context.magicString.remove(start, end);
+        }
+      }
+      else if (typeof value !== 'object' || value === null) {
+        // 如果值为 基本数据类型 或 null 时。
+        this[key] = value;
+      }
+      else if (Array.isArray(value)) {
+        // 如果值为数组的话则根据每一个 ast node 的类型来实例化节点。
+        this[key] = [];
+        for (const child of value) {
+          this[key].push(child === null
+            ? null
+            : new (this.context.getNodeConstructor(child.type))(child, this, this.scope));
+        }
+      }
+      else {
+        // 如果值为对象的话则根据 ast node 的类型来实例化节点。
+        this[key] = new (this.context.getNodeConstructor(value.type))(value, this, this.scope);
+      }
+    }
+  }
+}
+```
+
+从以上代码可以很清晰地看出来流程为根据当前 `ast node` 的结构来收集节点数据。遍历的时候若值存在对象( 数组说明存在多个 `子ast node`, 纯对象的话则只有一个 `子ast node` )的情况下就实例化 `子ast node` 对象。`子ast node` 对象实例化的时候继续按照以上流程实例化 `子ast node` 的 `子ast node`，以此通过递归的方式来实例化所有的 `ast node`。
+
+::: tip ParseNode
+  `parseNode` 的流程为递归所有的子 `ast node` 并为对应的 `ast node` 进行实例化，在实例对象中会收集 `ast` 节点中的所有数据。同时也是为了下面 `initialise` 初始化流程奠定了基础。
+:::
+
+#### 初始化 node constructor 实例
+  
+这个也是为初始化流程中最为重要的阶段，实例化对象中会对不同 `ast` 节点做不同的初始化处理。具体情况具体分析，举一个例子。
+
+```js
+const hello = 'world';
+```
+
+转化为 `JSON` 后的结构:
+
+```json
+{
+  "type": "Program",
+  "start": 0,
+  "end": 22,
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "start": 0,
+      "end": 22,
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "start": 6,
+          "end": 21,
+          "id": {
+            "type": "Identifier",
+            "start": 6,
+            "end": 11,
+            "name": "hello"
+          },
+          "init": {
+            "type": "Literal",
+            "start": 14,
+            "end": 21,
+            "value": "world",
+            "raw": "'world'"
+          }
+        }
+      ],
+      "kind": "const"
+    }
+  ],
+  "sourceType": "module"
+}
+```
+
+由递归流程可知首次执行 `initialise` 的 `ast node` 结构如下:
+
+```json
+{
+  "type": "Identifier",
+  "start": 6,
+  "end": 11,
+  "name": "hello"
+}
+```
+
+对于 `Identifier` 节点在初始化的时候不需要做任何操作。
+
+第二次执行 `ast node` 为 `Literal` 节点，结构如下：
+
+```json
+{
+  "type": "Literal",
+  "start": 14,
+  "end": 21,
+  "value": "world",
+  "raw": "'world'"
+}
+```
+
+对于 `Literal` 节点在初始化的时候处理简略逻辑如下：
+
+```js
+function getLiteralMembersForValue(value) {
+  switch (typeof value) {
+    case 'boolean':
+      return literalBooleanMembers;
+    case 'number':
+      return literalNumberMembers;
+    case 'string':
+      return literalStringMembers;
+  }
+  return Object.create(null);
+}
+class Literal extends NodeBase {
+  initialise() {
+    this.members = getLiteralMembersForValue(this.value);
+  }
+}
+```
+
+从代码逻辑上看会根据字面量类型返回字面量描述信息。
+
+第三次执行 `ast node` 为 `VariableDeclarator` 节点，结构如下：
+
+```json
+{
+  "type": "VariableDeclarator",
+  "start": 6,
+  "end": 21,
+  "id": {
+    "type": "Identifier",
+    "start": 6,
+    "end": 11,
+    "name": "hello"
+  },
+  "init": {
+    "type": "Literal",
+    "start": 14,
+    "end": 21,
+    "value": "world",
+    "raw": "'world'"
+  }
+}
+```
+
+对于 `VariableDeclarator` 节点在初始化的时候不需要做任何操作。
+
+第四次执行 `ast node` 为 `VariableDeclaration` 节点，结构如下：
+
+```json
+{
+  "type": "VariableDeclaration",
+  "start": 0,
+  "end": 22,
+  "declarations": [
+    {
+      "type": "VariableDeclarator",
+      "start": 6,
+      "end": 21,
+      "id": {
+        "type": "Identifier",
+        "start": 6,
+        "end": 11,
+        "name": "hello"
+      },
+      "init": {
+        "type": "Literal",
+        "start": 14,
+        "end": 21,
+        "value": "world",
+        "raw": "'world'"
+      }
+    }
+  ],
+  "kind": "const"
+}
+```
+
+对于 `VariableDeclaration` 节点在初始化的时候处理简略逻辑如下：
+
+```js
+class Scope$1 {
+  addDeclaration(identifier, context, init, _isHoisted) {
+    const name = identifier.name;
+    let variable = this.variables.get(name);
+    if (variable) {
+      variable.addDeclaration(identifier, init);
+    }
+    else {
+      variable = new LocalVariable(identifier.name, identifier, init || UNDEFINED_EXPRESSION, context);
+      this.variables.set(name, variable);
+    }
+    return variable;
+  }
+}
+
+class Identifier extends NodeBase {
+  declare(kind, init) {
+    let variable;
+    const { treeshake } = this.context.options;
+    switch (kind) {
+      case 'var':
+        variable = this.scope.addDeclaration(this, this.context, init, true);
+        if (treeshake && treeshake.correctVarValueBeforeDeclaration) {
+          // Necessary to make sure the init is deoptimized. We cannot call deoptimizePath here.
+          variable.markInitializersForDeoptimization();
+        }
+        break;
+      case 'function':
+        // in strict mode, functions are only hoisted within a scope but not across block scopes
+        variable = this.scope.addDeclaration(this, this.context, init, false);
+        break;
+      case 'let':
+      case 'const':
+      case 'class':
+        variable = this.scope.addDeclaration(this, this.context, init, false);
+        break;
+      case 'parameter':
+        variable = this.scope.addParameterDeclaration(this);
+        break;
+      /* istanbul ignore next */
+      default:
+        /* istanbul ignore next */
+        throw new Error(`Internal Error: Unexpected identifier kind ${kind}.`);
+    }
+    variable.kind = kind;
+    return [(this.variable = variable)];
+  }
+}
+
+class VariableDeclarator extends NodeBase {
+  declareDeclarator(kind) {
+    this.id.declare(kind, this.init || UNDEFINED_EXPRESSION);
+  }
+}
+
+class VariableDeclaration extends NodeBase {
+  initialise() {
+    for (const declarator of this.declarations) {
+      declarator.declareDeclarator(this.kind);
+    }
+  }
+}
+```
+
+从以上代码逻辑中可以看出来会将当前 `statement` 中的所有声明的变量进行实例化并注册到当前 `scope` 上下文中，当然申明的关键字不一样时处理逻辑也会有所区别。
+
+### 子依赖模块的收集和构建
+
+在递归实例化 `ast node` 之前我们会发现会往上下文中注入以下能力
+
+```js
+this.astContext = {
+  addDynamicImport: this.addDynamicImport.bind(this),
+  addExport: this.addExport.bind(this),
+  addImport: this.addImport.bind(this),
+  addImportMeta: this.addImportMeta.bind(this),
+  code,
+  deoptimizationTracker: this.graph.deoptimizationTracker,
+  error: this.error.bind(this),
+  fileName,
+  getExports: this.getExports.bind(this),
+  getModuleExecIndex: () => this.execIndex,
+  getModuleName: this.basename.bind(this),
+  getNodeConstructor: (name) => nodeConstructors[name] || nodeConstructors.UnknownNode,
+  getReexports: this.getReexports.bind(this),
+  importDescriptions: this.importDescriptions,
+  includeAllExports: () => this.includeAllExports(true),
+  includeDynamicImport: this.includeDynamicImport.bind(this),
+  includeVariableInModule: this.includeVariableInModule.bind(this),
+  magicString: this.magicString,
+  module: this,
+  moduleContext: this.context,
+  options: this.options,
+  requestTreeshakingPass: () => (this.graph.needsTreeshakingPass = true),
+  traceExport: (name) => this.getVariableForExportName(name)[0],
+  traceVariable: this.traceVariable.bind(this),
+  usesTopLevelAwait: false,
+  warn: this.warn.bind(this)
+};
+
+this.ast = new Program(ast, { context: this.astContext, type: 'Module' }, this.scope);
+```
+
+对于 **`addDynamicImport`**、 **`addExport`**、 **`addImport`** 需要重点关注一下，来看一下具体实现源码。
+
+**对于 `addDynamicImport` 处理：**
+
+在解析的时候处理流程如下：
+
+```js
+class Module {
+  addDynamicImport(node) {
+    let argument = node.source;
+    // 模版字符串 import(`react`)
+    if (argument instanceof TemplateLiteral) {
+      if (argument.quasis.length === 1 && argument.quasis[0].value.cooked) {
+        argument = argument.quasis[0].value.cooked;
+      }
+    }
+    // 字符串 import('react')
+    else if (argument instanceof Literal && typeof argument.value === 'string') {
+      argument = argument.value;
+    }
+    this.dynamicImports.push({ argument, id: null, node, resolution: null });
+  }
+}
+```
+
+当处理类型为 `ImportExpression` 的 `ast` 节点时会进入此流程
+
+```js
+import('demo')
+
+class ImportExpression extends NodeBase {
+  initialise() {
+    this.context.addDynamicImport(this);
+  }
+}
+```
+
+可以看出在处理 `ImportExpression` 节点初始化的时候会为当前 `module` 添加动态导入信息到 `dynamicImports` 变量中。
+
+**对于 `addExport` 处理：**
+
+处理 `addExport` 的流程会比上述复杂很多，`export` 导出方式可以分为以下几种:
+
++ 重导出方式，对应类型为 `ExportAllDeclaration` 的 `ast node`。
+
+```js
+/**
+ * 导出 demo 模块中所有 具名导出 和 默认导出。
+ * 可以看作：
+ * == demo.js ==
+ * export const a = 1, b = 2;
+ * export default function Demo () {}
+ * 
+ * == index.js ==
+ * import Demo, { a, b } from './demo.js';
+ * export { a, b, Demo };
+ * 
+ * OR
+ * 
+ * == index.js ==
+ * import { a, b, default as Demo } from './demo.js';
+ * export { a, b, Demo };
+ */
+export * as demo from 'demo';
+
+/**
+ * 导出 demo 模块中所有 具名导出，因此导入的时候不能使用默认导入方式( import demo from './demo.js' )。
+ * 可以看作：
+ * == demo.js ==
+ * export const a = 1, b = 2;
+ * export default function Demo () {}
+ * 
+ * == index.js ==
+ * import { a, b } from './demo.js';
+ * export { a, b };
+ */
+export * from 'demo';
+```
+
+在解析的时候处理流程如下：
+
+```js
+class Module {
+  addExport(node) {
+    if (node instanceof ExportAllDeclaration) {
+      const source = node.source.value;
+      this.sources.add(source);
+      if (node.exported) {
+        // export * as name from './other'
+        const name = node.exported.name;
+        this.reexportDescriptions.set(name, {
+          localName: '*',
+          module: null,
+          source,
+          start: node.start
+        });
+      }
+      else {
+        // export * from './other'
+        this.exportAllSources.add(source);
+      }
+    }
+    // ...
+  }
+}
+```
+
+当处理类型为 `ExportAllDeclaration` 的 `ast` 节点时会进入此流程
+
+```js
+class ExportAllDeclaration extends NodeBase {
+  initialise() {
+    this.context.addExport(this);
+  }
+}
+```
+
++ 默认导出，对应类型为 `ExportDefaultDeclaration` 的 `ast node`。
+
+```js
+export default 'demo';
+```
+
+在解析的时候处理流程如下：
+
+```js
+class Module {
+  addExport(node) {
+    if (node instanceof ExportDefaultDeclaration) {
+      // export default foo;
+      this.exports.set('default', {
+        identifier: node.variable.getAssignedVariableName(),
+        localName: 'default'
+      });
+    }
+    // ...   
+  } 
+}
+```
+
+当处理类型为 `ExportAllDeclaration` 的 `ast` 节点时会进入此流程
+
+```js
+class ExportDefaultDeclaration extends NodeBase {
+  initialise() {
+    const declaration = this.declaration;
+    this.declarationName =
+      (declaration.id && declaration.id.name) || this.declaration.name;
+    this.variable = this.scope.addExportDefaultDeclaration(this.declarationName || this.context.getModuleName(), this, this.context);
+    this.context.addExport(this);
+  }
+}
+```
+
++ 具名导出，对应类型为 `ExportNamedDeclaration` 的 `ast node`。
+
+```js
+export { demo } from 'demo';
+
+export var demo = 1, foo = 2;
+
+export function demo () {}
+
+export { demo };
+```
+
+在解析的时候处理流程如下：
+
+```js
+class Module {
+  addExport(node) {
+    if (node.source instanceof Literal) {
+        // export { name } from './other'
+      const source = node.source.value;
+      this.sources.add(source);
+      for (const specifier of node.specifiers) {
+        const name = specifier.exported.name;
+        this.reexportDescriptions.set(name, {
+          localName: specifier.local.name,
+          module: null,
+          source,
+          start: specifier.start
+        });
+      }
+    }
+    else if (node.declaration) {
+      const declaration = node.declaration;
+      if (declaration instanceof VariableDeclaration) {
+        // export var { foo, bar } = ...
+        // export var foo = 1, bar = 2;
+        for (const declarator of declaration.declarations) {
+          for (const localName of extractAssignedNames(declarator.id)) {
+            this.exports.set(localName, { identifier: null, localName });
+          }
+        }
+      }
+      else {
+        // export function foo () {}
+        const localName = declaration.id.name;
+        this.exports.set(localName, { identifier: null, localName });
+      }
+    }
+    else {
+      // export { foo, bar, baz }
+      for (const specifier of node.specifiers) {
+        const localName = specifier.local.name;
+        const exportedName = specifier.exported.name;
+        this.exports.set(exportedName, { identifier: null, localName });
+      }
+    }
+  }
+  // ...
+}
+```
+
+当处理类型为 `ExportNamedDeclaration` 的 `ast` 节点时会进入此流程
+
+```js
+class ExportNamedDeclaration extends NodeBase {
+  initialise() {
+    this.context.addExport(this);
+  }
+}
+```
+
+**对于 `addImport` 处理：**
+
+在解析的时候处理流程如下：
+
+```js
+class Module {
+  addImport(node) {
+    const source = node.source.value;
+    this.sources.add(source);
+    for (const specifier of node.specifiers) {
+      const isDefault = specifier.type === ImportDefaultSpecifier$1;
+      const isNamespace = specifier.type === ImportNamespaceSpecifier$1;
+      const name = isDefault ? 'default' : isNamespace ? '*' : specifier.imported.name;
+      this.importDescriptions.set(specifier.local.name, {
+        module: null,
+        name,
+        source,
+        start: specifier.start
+      });
+    }
+  }
+}
+```
+
+当处理类型为 `ImportDeclaration` 的 `ast` 节点时会进入此流程
+
+```js
+import demo from 'demo';
+import { a, default as demo } from 'demo';
+import * as demo from 'demo';
+
+class ImportDeclaration extends NodeBase {
+  initialise() {
+    this.context.addImport(this);
+  }
+}
+```
+
+::: tip 子依赖收集小结
+`rollup` 在递归 `ast` 之前会注入上下文( `astContext` )，上下文为当前模块提供了收集依赖信息的能力。递归 `ast` 的时候会通过检测节点( `import`、 `export` )，提取节点信息并通过上下文( `astContext` )为 `module` 注入子依赖信息。
+:::
+
+子依赖收集流程已经介绍完成，接下来介绍的就是子依赖模块构建的流程。
+
+从源码上可以看出在构建完当前模块后就会执行子模块路径的解析
+
+**代码简略如下：**
+
+```js
+class ModuleLoader {
+  getResolveStaticDependencyPromises(module) {
+    return Array.from(module.sources, async (source) => [
+      source,
+      (module.resolvedIds[source] =
+        module.resolvedIds[source] ||
+            this.handleResolveId(await this.resolveId(source, module.id, EMPTY_OBJECT, false), source, module.id))
+    ]);
+  }
+  getResolveDynamicImportPromises(module) {
+    return module.dynamicImports.map(async (dynamicImport) => {
+      const resolvedId = await this.resolveDynamicImport(module, typeof dynamicImport.argument === 'string'
+        ? dynamicImport.argument
+        : dynamicImport.argument.esTreeNode, module.id);
+      if (resolvedId && typeof resolvedId === 'object') {
+        dynamicImport.id = resolvedId.id;
+      }
+      return [dynamicImport, resolvedId];
+    });
+  }
+  async fetchModule({ id, meta, moduleSideEffects, syntheticNamedExports }, importer, isEntry, isPreload) {
+    const loadPromise = this.addModuleSource(id, importer, module).then(() => [
+      // 获取子依赖模块路径
+      this.getResolveStaticDependencyPromises(module),
+      // 获取子依赖模块动态路径
+      this.getResolveDynamicImportPromises(module),
+      // 加载子模块依赖路径解析完成的标志，会触发 moduleParsed 钩子。
+      loadAndResolveDependenciesPromise
+    ]);
+    const loadAndResolveDependenciesPromise = waitForDependencyResolution(loadPromise).then(() => this.pluginDriver.hookParallel('moduleParsed', [module.info]));
+    // ...
+  }
+}
+```
+
+子依赖模块路径解析完成之后就进入子模块构建的阶段
+
+**代码简略如下：**
+
+```js
+class ModuleLoader {
+  async fetchModule({ id, meta, moduleSideEffects, syntheticNamedExports }, importer, isEntry, isPreload) {
+    // ...
+    const resolveDependencyPromises = await loadPromise;
+    if (!isPreload) {
+      await this.fetchModuleDependencies(module, ...resolveDependencyPromises);
+    }
+    // ...
+  }
+  async fetchModuleDependencies(module, resolveStaticDependencyPromises, resolveDynamicDependencyPromises, loadAndResolveDependenciesPromise) {
+    // 如果当前模块已经处于解析子依赖模块的情况下就不进行后续处理。
+    if (this.modulesWithLoadedDependencies.has(module)) {
+      return;
+    }
+    this.modulesWithLoadedDependencies.add(module);
+    await Promise.all([
+      this.fetchStaticDependencies(module, resolveStaticDependencyPromises),
+      this.fetchDynamicDependencies(module, resolveDynamicDependencyPromises)
+    ]);
+    // ...
+  }
+  fetchResolvedDependency(source, importer, resolvedId) {
+    if (resolvedId.external) {
+      const { external, id, moduleSideEffects, meta } = resolvedId;
+      if (!this.modulesById.has(id)) {
+        this.modulesById.set(id, new ExternalModule(this.options, id, moduleSideEffects, meta, external !== 'absolute' && isAbsolute(id)));
+      }
+      const externalModule = this.modulesById.get(id);
+      if (!(externalModule instanceof ExternalModule)) {
+        return error(errInternalIdCannotBeExternal(source, importer));
+      }
+      return Promise.resolve(externalModule);
+    }
+    return this.fetchModule(resolvedId, importer, false, false);
+  }
+  async fetchStaticDependencies(module, resolveStaticDependencyPromises) {
+    for (const dependency of await Promise.all(resolveStaticDependencyPromises.map(resolveStaticDependencyPromise => resolveStaticDependencyPromise.then(([source, resolvedId]) => this.fetchResolvedDependency(source, module.id, resolvedId))))) {
+      module.dependencies.add(dependency);
+      dependency.importers.push(module.id);
+    }
+    if (!this.options.treeshake || module.info.moduleSideEffects === 'no-treeshake') {
+      for (const dependency of module.dependencies) {
+        if (dependency instanceof Module) {
+          dependency.importedFromNotTreeshaken = true;
+        }
+      }
+    }
+  }
+  async fetchDynamicDependencies(module, resolveDynamicImportPromises) {
+    const dependencies = await Promise.all(resolveDynamicImportPromises.map(resolveDynamicImportPromise => resolveDynamicImportPromise.then(async ([dynamicImport, resolvedId]) => {
+      if (resolvedId === null)
+        return null;
+      if (typeof resolvedId === 'string') {
+        dynamicImport.resolution = resolvedId;
+        return null;
+      }
+      return (dynamicImport.resolution = await this.fetchResolvedDependency(relativeId(resolvedId.id), module.id, resolvedId));
+    })));
+    for (const dependency of dependencies) {
+      if (dependency) {
+        module.dynamicDependencies.add(dependency);
+        dependency.dynamicImporters.push(module.id);
+      }
+    }
+  }
+}
+```
+
+可以看出来子依赖模块构建流程其实本质上就是一个递归的流程，最终还是调用了 `this.fetchModule(resolvedId, importer, false, false)` 来加载子以来模块信息。
+
+::: danger 注意
+子依赖模块执行 `fetchModule` 的时候传入的 `entry` 值为 `false`，表明模块为非入口模块。
+:::
 
 
 在 `generateModuleGraph` 函数中我们可以发现 。
-
 
 ```js
 // If this is a preload, then this method always waits for the dependencies of the module to be resolved.
