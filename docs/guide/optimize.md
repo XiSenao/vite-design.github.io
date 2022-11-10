@@ -22,6 +22,7 @@ server.listen = (async (port: number, ...args: any[]) => {
 
 我们可以看到预优化的进行是在在服务启动成功之前。
 
+
 ## 定义缓存文件夹
 
 被 Vite 预处理后的文件都将放置在该文件夹

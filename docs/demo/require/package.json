@@ -1,0 +1,7 @@
+{
+  "name": "require",
+  "version": "1.0.0",
+  "main": "require-mock.js",
+  "license": "MIT",
+  "type": "commonjs"
+}

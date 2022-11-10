@@ -30,13 +30,11 @@ async function rollupInternal (rawInputOptions, watcher) {
 }
 ```
 
-简单来说可以分为 **`生成模块间依赖关系`**、**`按照模块执行加载进行排序`**、**`tree shaking 处理`**。而本节中的 **`模块解析`** 流程就是第一步(**`生成模块间依赖关系`**)。
+简单来说可以分为 **`生成模块依赖图`**、**`按照模块执行排序排列`**、**`tree shaking 处理`**。而本节中的 **`模块解析`** 流程就是第一步(**`生成模块间依赖关系`**)。
 
-通过检索代码执行路径 ( `generateModuleGraph` -> `addEntryModules` -> `loadEntryModule` -> `fetchModule`) 可以发现最后会执行 `fetchModule` 来执行模块解析流程。
+模块解析的流程可以简单的概括为 **`确定构建来源`**、 **`源码的获取`** 、 **`转译源码`** 、**`构建模块上下文和初始化 ast 实例`**、 **`子依赖模块的收集和构建`**、 **`依赖关系的确定`**。
 
-模块解析的流程可以简单的概括为 **`构建来源`**、 **`源码的获取`** 、 **`调用插件的 transform hook 转译源码`** 、**`构建模块上下文和初始化 ast 实例`**。
-
-### 构建来源
+### 确定构建来源
 
 构建来源从源码上看由两部分组成。第一部分是以 **`this.options.input`** 作为入口进行解析，代码如下:
 
@@ -258,7 +256,7 @@ async addModuleSource(id, importer, module) {
 反之则为 `真实模块`。
 :::
 
-### 调用插件的 transform hook 转译源码
+### 转译源码
 
 ```js
 await transform(sourceDescription, module, this.pluginDriver, this.options.onwarn)
@@ -1206,7 +1204,7 @@ class ModuleLoader {
       this.getResolveStaticDependencyPromises(module),
       // 获取子依赖模块动态路径
       this.getResolveDynamicImportPromises(module),
-      // 加载子模块依赖路径解析完成的标志，会触发 moduleParsed 钩子。
+      // 加载子模块依赖路径解析完成的标志，会触发 moduleParsed 钩子( 意味着当前模块解析完成(自身模块 + 子依赖模块路径) )。
       loadAndResolveDependenciesPromise
     ]);
     const loadAndResolveDependenciesPromise = waitForDependencyResolution(loadPromise).then(() => this.pluginDriver.hookParallel('moduleParsed', [module.info]));
@@ -1225,6 +1223,7 @@ class ModuleLoader {
     // ...
     const resolveDependencyPromises = await loadPromise;
     if (!isPreload) {
+      // 构建当前模块所有子模块依赖。
       await this.fetchModuleDependencies(module, ...resolveDependencyPromises);
     }
     // ...
@@ -1234,7 +1233,9 @@ class ModuleLoader {
     if (this.modulesWithLoadedDependencies.has(module)) {
       return;
     }
+    // 标记当前模块进入构建子依赖模块阶段。
     this.modulesWithLoadedDependencies.add(module);
+    // rollup 在构建子依赖模块的时候会区分子依赖模块的导入方式(静态导入或动态导入)。
     await Promise.all([
       this.fetchStaticDependencies(module, resolveStaticDependencyPromises),
       this.fetchDynamicDependencies(module, resolveDynamicDependencyPromises)
@@ -1242,6 +1243,7 @@ class ModuleLoader {
     // ...
   }
   fetchResolvedDependency(source, importer, resolvedId) {
+    // 对于外部模块则有专门的处理方案，不需要进行 fetchModule 流程。
     if (resolvedId.external) {
       const { external, id, moduleSideEffects, meta } = resolvedId;
       if (!this.modulesById.has(id)) {
@@ -1257,9 +1259,12 @@ class ModuleLoader {
   }
   async fetchStaticDependencies(module, resolveStaticDependencyPromises) {
     for (const dependency of await Promise.all(resolveStaticDependencyPromises.map(resolveStaticDependencyPromise => resolveStaticDependencyPromise.then(([source, resolvedId]) => this.fetchResolvedDependency(source, module.id, resolvedId))))) {
+      // 当前模块绑定与子依赖模块之间的依赖关系，即 module 模块依赖哪些静态模块。
       module.dependencies.add(dependency);
+      // 子依赖模块绑定和父模块之间的依赖关系，即 dependency 模块被哪些静态模块所引用。
       dependency.importers.push(module.id);
     }
+    // 如果模块不需要进行 treeshaking 处理则给当前模块所有的子依赖模块标记 importedFromNotTreeshaken = true。
     if (!this.options.treeshake || module.info.moduleSideEffects === 'no-treeshake') {
       for (const dependency of module.dependencies) {
         if (dependency instanceof Module) {
@@ -1270,6 +1275,7 @@ class ModuleLoader {
   }
   async fetchDynamicDependencies(module, resolveDynamicImportPromises) {
     const dependencies = await Promise.all(resolveDynamicImportPromises.map(resolveDynamicImportPromise => resolveDynamicImportPromise.then(async ([dynamicImport, resolvedId]) => {
+      // 如果解析路径不存在则无需后续流程
       if (resolvedId === null)
         return null;
       if (typeof resolvedId === 'string') {
@@ -1280,7 +1286,9 @@ class ModuleLoader {
     })));
     for (const dependency of dependencies) {
       if (dependency) {
+        // 当前模块绑定与子依赖模块之间的依赖关系，即 module 模块依赖哪些动态模块。
         module.dynamicDependencies.add(dependency);
+        // 子依赖模块绑定和父模块之间的依赖关系，即 dependency 模块被哪些静态模块所引用。
         dependency.dynamicImporters.push(module.id);
       }
     }
@@ -1288,85 +1296,40 @@ class ModuleLoader {
 }
 ```
 
-可以看出来子依赖模块构建流程其实本质上就是一个递归的流程，最终还是调用了 `this.fetchModule(resolvedId, importer, false, false)` 来加载子以来模块信息。
-
-::: danger 注意
-子依赖模块执行 `fetchModule` 的时候传入的 `entry` 值为 `false`，表明模块为非入口模块。
+::: tip 总结
+  静态导入和动态导入作为当前模块子依赖解析的入口，`rollup` 区分了两者导入的差异，这也是为了后续生成独立 `chunk` 做了层铺垫。最终依旧是 **递归(深度优先搜索)** 方式调用 `this.fetchModule(resolvedId, importer, false, false)` 来加载及构建子依赖模块信息。这里需要注意的是子依赖模块执行 `fetchModule` 的时候携带的 `entry` 值为 `false`，即表明模块为非入口模块。
 :::
 
+### 依赖关系的确定
 
-在 `generateModuleGraph` 函数中我们可以发现 。
+并发获取子依赖模块之后就可以绑定模块与子依赖模块之间的关系，静态导入模块和动态导入模块绑定的属性会有所区别。
+
+**代码简略如下：**
 
 ```js
-// If this is a preload, then this method always waits for the dependencies of the module to be resolved.
-// Otherwise if the module does not exist, it waits for the module and all its dependencies to be loaded.
-// Otherwise it returns immediately.
-async fetchModule({ id, meta, moduleSideEffects, syntheticNamedExports }, importer, isEntry, isPreload) {
-  /**
-   * preload 场景:
-   *  在预构建流程中，处理模块 transfrom 阶段的时候，vite:optimized-deps-build 插件会执行如下代码
-   *  getDepsOptimizer(config)?.delayDepsOptimizerUntil(id, async () => {
-   *     await this.load({ id });
-   *  });
-   *  代码主要流程为注册ID并在合适的时机中执行 load 处理， 而这里的 load 处理也就是 preload 处理。
-   */
-  const existingModule = this.modulesById.get(id);
-  if (existingModule instanceof Module) {
-      await this.handleExistingModule(existingModule, isEntry, isPreload);
-      return existingModule;
+class ModuleLoader {
+  async fetchStaticDependencies(module, resolveStaticDependencyPromises) {
+    for (const dependency of await Promise.all(resolveStaticDependencyPromises.map(resolveStaticDependencyPromise => resolveStaticDependencyPromise.then(([source, resolvedId]) => this.fetchResolvedDependency(source, module.id, resolvedId))))) {
+      // 当前模块绑定与子依赖模块之间的依赖关系，即 module 模块依赖哪些静态模块。
+      module.dependencies.add(dependency);
+      // 子依赖模块绑定和父模块之间的依赖关系，即 dependency 模块被哪些静态模块所引用。
+      dependency.importers.push(module.id);
+    }
+    // ...
   }
-  // 实例化 Module
-  const module = new Module(this.graph, id, this.options, isEntry, moduleSideEffects, syntheticNamedExports, meta);
-  this.modulesById.set(id, module);
-  this.graph.watchFiles[id] = true;
-  const loadPromise = this.addModuleSource(id, importer, module).then(() => [
-    // 获取子依赖模块路径
-    this.getResolveStaticDependencyPromises(module),
-    // 获取子依赖模块动态路径
-    this.getResolveDynamicImportPromises(module),
-    loadAndResolveDependenciesPromise
-  ]);
-  // 解析当前模块所有的子依赖模块
-  const loadAndResolveDependenciesPromise = waitForDependencyResolution(loadPromise).then(() => this.pluginDriver.hookParallel('moduleParsed', [module.info]));
-  loadAndResolveDependenciesPromise.catch(() => {
-      /* avoid unhandled promise rejections */
-  });
-  this.moduleLoadPromises.set(module, loadPromise);
-  // 等待模块解析完成但不包含子模块路径解析完成。
-  const resolveDependencyPromises = await loadPromise;
-  if (!isPreload) {
-    // 解析当前模块所有的子模块依赖
-    await this.fetchModuleDependencies(module, ...resolveDependencyPromises);
-  }
-  else if (isPreload === RESOLVE_DEPENDENCIES) {
-    await loadAndResolveDependenciesPromise;
-  }
-  return module;
-}
-
-// 生成模块依赖图关键代码
-async fetchStaticDependencies(module, resolveStaticDependencyPromises) {
-  for (const dependency of await Promise.all(resolveStaticDependencyPromises.map(resolveStaticDependencyPromise => resolveStaticDependencyPromise.then(([source, resolvedId]) => this.fetchResolvedDependency(source, module.id, resolvedId))))) {
-    // 当前模块绑定与子依赖模块之间的依赖关系
-    module.dependencies.add(dependency);
-    // 子依赖模块绑定和父模块之间的依赖关系
-    dependency.importers.push(module.id);
-  }
-  // 如果模块不需要进行 treeshaking 处理则给当前模块所有的子依赖模块标记 importedFromNotTreeshaken = true。
-  if (!this.options.treeshake || module.info.moduleSideEffects === 'no-treeshake') {
-    for (const dependency of module.dependencies) {
-      if (dependency instanceof Module) {
-        dependency.importedFromNotTreeshaken = true;
+  async fetchDynamicDependencies(module, resolveDynamicImportPromises) {
+    // ...
+    for (const dependency of dependencies) {
+      if (dependency) {
+        // 当前模块绑定与子依赖模块之间的依赖关系，即 module 模块依赖哪些动态模块。
+        module.dynamicDependencies.add(dependency);
+        // 子依赖模块绑定和父模块之间的依赖关系，即 dependency 模块被哪些静态模块所引用。
+        dependency.dynamicImporters.push(module.id);
       }
     }
   }
 }
 ```
 
-``
-
 
 ## 开发环境中
-
-
-

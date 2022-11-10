@@ -47,14 +47,18 @@ module.exports = {
         {
           collapsable: true,
           children: [
+            '',
             'chinese-doc',
             'getting-start',
+            'config-resolve',
             'module-resolve',
+            'sort-modules',
             'optimize',
             'render',
             'hmr',
             '2.0/optimize',
-            '2.0/ssr'
+            '2.0/ssr',
+            'practicalities'
           ],
         }
       ]
