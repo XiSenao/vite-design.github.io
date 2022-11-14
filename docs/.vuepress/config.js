@@ -58,7 +58,11 @@ module.exports = {
             'hmr',
             '2.0/optimize',
             '2.0/ssr',
-            'practicalities'
+            'plugin',
+            'extension.md',
+            'practicalities',
+            'leedcode',
+            'diary'
           ],
         }
       ]

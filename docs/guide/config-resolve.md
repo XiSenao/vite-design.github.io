@@ -253,8 +253,10 @@ else {
 需要注意，通过打包流程会获取到当前模块的依赖模块(包含自身模块) `dependencies`，这个会和后续的 [**HMR**](/guide/hmr.html) 的 `handleHMRUpdate` 更新有关。
 
 ## `plugins` 的初始化和排序
+  
+  `Vite` 中的插件主要分为两种，用户编写的插件和 `Vite` 内置的插件。对于用户编写的插件在此又会分为 `user plugin` 和 `worker plugin`。
 
-1. 初始化插件
+1. **初始化插件**
 
 + 扁平化 `vite.config` 模块中所有的 `plugins`，这意味着 `Vite` 在插件中实现上支持 `异步操作` 和 `一个插件可导出多个插件`。
 
@@ -290,7 +292,7 @@ else {
   });                                                                                
   ```
 
-2. 排序插件
+2. **排序插件，确定插件的优先级**
 
   根据插件的优先级来排序插件的执行顺序，代码如下：
   
@@ -329,6 +331,20 @@ else {
   }
   ```
 
+4. **解析插件**
+
+
 ## 加载 `env` 文件
 
-默认的环境变量模块的存储路径在 `根目录下`，用户可以通过在 `vite.config` 配置模块中设置 `envDir` 属性来修改默认路径。
+在 `vite.config` 中可以通过配置 `envPrefix` (默认为 [`VITE_`]) 来定义以 `prefixes` 为前缀的所有 `process.env` 和 `envFiles` 模块中的变量。`Vite` 对于 `env` 模块分为以下 `4` 类。
+
+```js
+/** mode local file */ `.env.${mode}.local`,
+/** mode file */ `.env.${mode}`,
+/** local file */ `.env.local`,
+/** default file */ `.env`
+```
+
+检索的方式为默认从根目录下(可以通过在 `vite.config` 配置模块中设置 `envDir` 属性来修改默认路径)开始，若没有检索到则往父路径下进行检索，直到检索到 `env` 模块路径为止。检索的方式和 `package.json` 的检索方式类似。
+
+加载 `env` 模块会借助 `dotenv` 的能力来进行解析。
