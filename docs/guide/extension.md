@@ -277,6 +277,9 @@ private runHook<H extends AsyncPluginHooks>(
     };
   ```
 
+  在以上两个格式中，可以提供了 `fileName` 或 `name`。如果 `fileName` 被提供，
+
+
 6. error
 7. getAssetFileName
 8. getChunkFileName

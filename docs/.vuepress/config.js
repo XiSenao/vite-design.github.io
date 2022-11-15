@@ -58,9 +58,10 @@ module.exports = {
             'hmr',
             '2.0/optimize',
             '2.0/ssr',
-            'plugin',
+            'plugins',
             'extension.md',
             'practicalities',
+            'knowledge-expansion',
             'leedcode',
             'diary'
           ],

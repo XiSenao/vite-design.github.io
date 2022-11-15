@@ -254,7 +254,31 @@ else {
 
 ## `plugins` 的初始化和排序
   
-  `Vite` 中的插件主要分为两种，用户编写的插件和 `Vite` 内置的插件。对于用户编写的插件在此又会分为 `user plugin` 和 `worker plugin`。
+  `Vite` 中的插件主要分为两种，用户编写的插件和 `Vite` 内置的插件。对于用户编写的插件会分为 `user plugin` 和 `worker plugin`。前者对于以 `this.option.entry`、`import()`、`this.emitChunk` 这一类的入口模块均会进行调用；而后者只针对于 `worker` 的模块，调用流程如下：
+
+  ```js
+  export async function bundleWorkerEntry(
+    config: ResolvedConfig,
+    id: string,
+    query: Record<string, string> | null
+  ): Promise<OutputChunk> {
+    // bundle the file as entry to support imports
+    const { rollup } = await import('rollup')
+    const { plugins, rollupOptions, format } = config.worker
+    const bundle = await rollup({
+      ...rollupOptions,
+      input: cleanUrl(id),
+      plugins,
+      onwarn(warning, warn) {
+        onRollupWarning(warning, warn, config)
+      },
+      preserveEntrySignatures: false
+    })
+    // ...
+  }
+  ```
+
+  可以看出来针对 `worker` 模块的处理，会通过直接调用 `rollup` 来生成模块，而这里用到的 `plugins` 也就是上述提到的 `worker plugins`。`worker plugins` 的处理时机在 `user normal plugins` 之前。插件详情流程可以跳转到 [worker plugin](/guide/plugins.html#vite:worker)
 
 1. **初始化插件**
 
@@ -268,7 +292,7 @@ else {
     return arr;
   }
   ```
-
+  
 + 过滤掉无需开启使用的插件，若插件中存在 `apply` 属性则根据 `apply` 属性的值来确定当前插件是否需要被用到。代码如下：
 
   ```js
@@ -336,15 +360,111 @@ else {
 
 ## 加载 `env` 文件
 
-在 `vite.config` 中可以通过配置 `envPrefix` (默认为 [`VITE_`]) 来定义以 `prefixes` 为前缀的所有 `process.env` 和 `envFiles` 模块中的变量。`Vite` 对于 `env` 模块分为以下 `4` 类。
+在 `vite.config` 中可以通过配置 `envPrefix` (默认为 [`VITE_`]) 来定义以 `prefixes` 为前缀的所有 `process.env` 和 `envFiles` 模块中的变量。`Vite` 对于 `env` 模块路径分为以下 `4` 类。
 
 ```js
-/** mode local file */ `.env.${mode}.local`,
-/** mode file */ `.env.${mode}`,
-/** local file */ `.env.local`,
-/** default file */ `.env`
+const envFiles = [
+  /** mode local file */ `.env.${mode}.local`,
+  /** mode file */ `.env.${mode}`,
+  /** local file */ `.env.local`,
+  /** default file */ `.env`
+];
 ```
 
-检索的方式为默认从根目录下(可以通过在 `vite.config` 配置模块中设置 `envDir` 属性来修改默认路径)开始，若没有检索到则往父路径下进行检索，直到检索到 `env` 模块路径为止。检索的方式和 `package.json` 的检索方式类似。
+检索方式默认从根目录下(可以通过在 `vite.config` 配置模块中设置 `envDir` 属性来修改默认路径) 开始，若没有检索到则往父路径下进行检索，直到检索到 `env` 模块路径为止。检索的方式和 `package.json` 的检索方式类似。
 
-加载 `env` 模块会借助 `dotenv` 的能力来进行解析。
+加载 `env` 模块会借助 `dotenv` 的能力来进行解析。不过这里需要注意的是 `env` 模块并不会被注入到 `process.env` 中。
+
+```js
+// let environment variables use each other
+main({
+  parsed,
+  // 避免对 process.env 产生影响
+  ignoreProcessEnv: true
+});
+```
+
+加载完成 `env` 模块后会获取到 `JS Object`，然后会提取以 `prefixes` 为前缀的所有非空键值对。
+
+```js
+function loadEnv(mode, envDir, prefixes = 'VITE_') {
+  if (mode === 'local') {
+    throw new Error(`"local" cannot be used as a mode name because it conflicts with ` +
+      `the .local postfix for .env files.`);
+  }
+  prefixes = arraify(prefixes);
+  const env = {};
+  const envFiles = [
+    /** mode local file */ `.env.${mode}.local`,
+    /** mode file */ `.env.${mode}`,
+    /** local file */ `.env.local`,
+    /** default file */ `.env`
+  ];
+  // check if there are actual env variables starting with VITE_*
+  // these are typically provided inline and should be prioritized
+  for (const key in process.env) {
+    if (prefixes.some((prefix) => key.startsWith(prefix)) &&
+      env[key] === undefined) {
+      env[key] = process.env[key];
+    }
+  }
+  for (const file of envFiles) {
+    const path = lookupFile(envDir, [file], { pathOnly: true, rootDir: envDir });
+    if (path) {
+      const parsed = main$1.exports.parse(fs$l.readFileSync(path), {
+        debug: process.env.DEBUG?.includes('vite:dotenv') || undefined
+      });
+      // let environment variables use each other
+      main({
+        parsed,
+        // prevent process.env mutation
+        ignoreProcessEnv: true
+      });
+      // only keys that start with prefix are exposed to client
+      for (const [key, value] of Object.entries(parsed)) {
+        if (prefixes.some((prefix) => key.startsWith(prefix)) &&
+          env[key] === undefined) {
+          env[key] = value;
+        }
+        else if (key === 'NODE_ENV' &&
+          process.env.VITE_USER_NODE_ENV === undefined) {
+          // NODE_ENV override in .env file
+          process.env.VITE_USER_NODE_ENV = value;
+        }
+      }
+    }
+  }
+  return env;
+}
+```
+
+最后的解析完成的 `env` 则作为 `userEnv`。用户最终可以通过 `config.env` 来进行获取。
+
+```js
+async function resolveConfig(inlineConfig, command, defaultMode = 'development') {
+  // ...
+  const resolved = {
+    // ...
+    env: {
+      ...userEnv,
+      BASE_URL,
+      MODE: mode,
+      DEV: !isProduction,
+      PROD: isProduction
+    },
+    // ...
+  }
+  //...
+  return resolved;
+}
+
+async function doBuild(inlineConfig = {}) {
+  const config = await resolveConfig(inlineConfig, 'build', 'production');
+  // ...
+}
+
+async function createServer(inlineConfig = {}) {
+  const config = await resolveConfig(inlineConfig, 'serve', 'development');
+  // ...
+}
+```
